@@ -1,0 +1,7 @@
+# NetDiscovery Local Daemon Dependencies
+# The daemon is designed with graceful fallbacks to Python standard libraries,
+# but installing these optional packages enables maximum speed and deep packet inspection.
+
+boto3>=1.28.0
+scapy>=2.5.0
+requests>=2.31.0

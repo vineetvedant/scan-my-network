@@ -1,0 +1,21 @@
+[Unit]
+Description=NetDiscovery Local Network Scanner & CloudFront Sync Daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/opt/netdiscovery/daemon
+# Set your target S3 bucket or API endpoint here
+ExecStart=/usr/bin/python3 /opt/netdiscovery/daemon/scanner.py --interval 30 --s3-bucket my-network-telemetry-bucket
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+# Ensure AWS credentials or IAM role are accessible
+Environment="AWS_DEFAULT_REGION=us-east-1"
+
+[Install]
+WantedBy=multi-user.target

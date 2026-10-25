@@ -1,0 +1,90 @@
+{
+  "FF:FF:FF:FF:FF:FF": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T09:09:52.615858+00:00",
+    "ip": "192.168.1.255",
+    "hostname": "SMBSHARE",
+    "vendor": "Unregistered / Generic Device",
+    "type": "Smart Home / IoT"
+  },
+  "2A:95:77:25:67:31": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T10:06:18.622678+00:00",
+    "ip": "192.168.1.5",
+    "hostname": "oneplus-11r-5g",
+    "vendor": "Private / Randomized MAC (Mobile / PC)",
+    "type": "Mobile Device",
+    "wifi_band": "5 GHz"
+  },
+  "B8:27:EB:B7:58:E0": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T10:06:18.622678+00:00",
+    "ip": "192.168.1.100",
+    "hostname": "pi",
+    "vendor": "Raspberry Pi Foundation",
+    "type": "Server / Infrastructure",
+    "wifi_band": "2.4 GHz"
+  },
+  "8A:07:D2:D4:E2:E4": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T09:09:52.615858+00:00",
+    "ip": "192.168.1.4",
+    "hostname": "Mobile Device (4)",
+    "vendor": "Private / Randomized MAC (Mobile / PC)",
+    "type": "Mobile Device"
+  },
+  "64:FB:92:49:33:EC": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T10:06:18.622678+00:00",
+    "ip": "192.168.1.1",
+    "hostname": "SMBSHARE",
+    "vendor": "Unregistered / Generic Device",
+    "type": "Gateway / Router",
+    "wifi_band": "Dual-Band"
+  },
+  "192.168.1.2": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T10:06:18.622678+00:00",
+    "ip": "192.168.1.2",
+    "hostname": "P?EDATO?",
+    "vendor": "Unregistered / Generic Device",
+    "type": "Workstation PC / Laptop",
+    "wifi_band": "5 GHz"
+  },
+  "7C:66:EF:C0:22:43": {
+    "first_seen": "2026-10-25T09:09:52.615858+00:00",
+    "last_seen": "2026-10-25T09:23:29.702401+00:00",
+    "ip": "192.168.1.8",
+    "hostname": "Workstation PC / Laptop (8)",
+    "vendor": "Unregistered / Generic Device",
+    "type": "Workstation PC / Laptop",
+    "wifi_band": "5 GHz"
+  },
+  "D6:AB:B3:1F:24:E1": {
+    "first_seen": "2026-10-25T09:10:43.633744+00:00",
+    "last_seen": "2026-10-25T09:23:29.702401+00:00",
+    "ip": "192.168.1.9",
+    "hostname": "bimal-kishore-s-s24-fe",
+    "vendor": "Private / Randomized MAC (Mobile / PC)",
+    "type": "Mobile Device",
+    "wifi_band": "5 GHz"
+  },
+  "76:12:0D:7B:9A:50": {
+    "first_seen": "2026-10-25T09:10:43.633744+00:00",
+    "last_seen": "2026-10-25T09:23:29.702401+00:00",
+    "ip": "192.168.1.7",
+    "hostname": "realme-x7-5g",
+    "vendor": "Private / Randomized MAC (Mobile / PC)",
+    "type": "Mobile Device",
+    "wifi_band": "5 GHz"
+  },
+  "1E:26:EE:72:3A:0E": {
+    "first_seen": "2026-10-25T09:10:43.633744+00:00",
+    "last_seen": "2026-10-25T09:10:43.633744+00:00",
+    "ip": "192.168.1.6",
+    "hostname": "Mobile Device (6)",
+    "vendor": "Private / Randomized MAC (Mobile / PC)",
+    "type": "Mobile Device",
+    "wifi_band": "5 GHz"
+  }
+}

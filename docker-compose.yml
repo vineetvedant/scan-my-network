@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  network-probe:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: netdiscovery-probe
+    restart: unless-stopped
+    # host network mode is required for raw ARP & L2 Wi-Fi subnet discovery
+    network_mode: host
+    environment:
+      - SITE_ID=${SITE_ID:-production_lan}
+      - SITE_NAME=${SITE_NAME:-Production Wi-Fi & LAN}
+      - SCAN_INTERVAL=30
+    volumes:
+      - ./devices.json:/app/devices.json
+      - ./network_state.json:/app/network_state.json

@@ -1,0 +1,171 @@
+{
+  "meta": {
+    "version": "1.2.0",
+    "site_id": "branch_emea",
+    "site_name": "EMEA Regional Branch",
+    "subnet": "192.168.20.0/24",
+    "gateway": "192.168.20.1",
+    "total_devices": 10,
+    "online_devices": 9,
+    "offline_devices": 1,
+    "timestamp": "2026-10-25T14:30:00Z",
+    "speedtest": {
+      "download_mbps": 520.4,
+      "upload_mbps": 180.2,
+      "ping_ms": 12.1,
+      "jitter_ms": 1.8,
+      "isp": "Orange Business Services / Anycast Edge",
+      "server": "Frankfurt Central Transit IX",
+      "timestamp": "2026-10-25T14:30:00Z"
+    }
+  },
+  "devices": [
+    {
+      "id": "00:08:E3:44:55:66",
+      "ip": "192.168.20.1",
+      "mac": "00:08:E3:44:55:66",
+      "vendor": "Cisco Systems",
+      "hostname": "branch-cisco-edge.emea.corp",
+      "type": "Gateway / Router",
+      "status": "Active",
+      "rtt_ms": 1.2,
+      "open_ports": [53, 80, 443],
+      "connection": "Dual-Band (2.4G + 5G)",
+      "wifi_band": "Dual-Band",
+      "interface_type": "Gigabit Edge Gateway",
+      "parallel_capable": true,
+      "parallel_connections": [
+        { "band": "WAN Gigabit Fiber", "status": "Active" },
+        { "band": "5 GHz Executive SSID", "status": "Active" }
+      ],
+      "is_gateway": true
+    },
+    {
+      "id": "74:83:C2:11:22:33",
+      "ip": "192.168.20.15",
+      "mac": "74:83:C2:11:22:33",
+      "vendor": "Ubiquiti Networks",
+      "hostname": "UniFi-U6-Pro-Ceiling-01",
+      "type": "Gateway / Router",
+      "status": "Active",
+      "rtt_ms": 2.1,
+      "open_ports": [22, 80, 443, 8080],
+      "connection": "Dual-Band (2.4G + 5G)",
+      "wifi_band": "Dual-Band",
+      "interface_type": "Wi-Fi 6 PoE Access Point",
+      "parallel_capable": true,
+      "parallel_connections": [
+        { "band": "5 GHz 4x4 MU-MIMO", "status": "Active" },
+        { "band": "2.4 GHz 2x2 IoT", "status": "Active" }
+      ],
+      "is_gateway": false
+    },
+    {
+      "id": "3C:D9:2B:66:77:88",
+      "ip": "192.168.20.45",
+      "mac": "3C:D9:2B:66:77:88",
+      "vendor": "HP Inc.",
+      "hostname": "hp-laserjet-enterprise-m608",
+      "type": "Printer / Peripheral",
+      "status": "Active",
+      "rtt_ms": 4.5,
+      "open_ports": [80, 443, 631, 9100],
+      "connection": "Ethernet (LAN)",
+      "wifi_band": "LAN",
+      "interface_type": "Gigabit Ethernet",
+      "parallel_capable": false,
+      "parallel_connections": [],
+      "is_gateway": false
+    },
+    {
+      "id": "B8:27:EB:12:34:56",
+      "ip": "192.168.20.60",
+      "mac": "B8:27:EB:12:34:56",
+      "vendor": "Raspberry Pi Foundation",
+      "hostname": "pi-dns-fallback",
+      "type": "Server / Infrastructure",
+      "status": "Active",
+      "rtt_ms": 3.2,
+      "open_ports": [22, 53, 80],
+      "connection": "Ethernet (LAN)",
+      "wifi_band": "LAN",
+      "interface_type": "Ethernet PoE",
+      "parallel_capable": false,
+      "parallel_connections": [],
+      "is_gateway": false
+    },
+    {
+      "id": "AC:DE:48:99:88:77",
+      "ip": "192.168.20.110",
+      "mac": "AC:DE:48:99:88:77",
+      "vendor": "Apple",
+      "hostname": "emea-director-macbook",
+      "type": "Workstation PC / Laptop",
+      "status": "Active",
+      "rtt_ms": 6.8,
+      "open_ports": [22],
+      "connection": "5 GHz Wi-Fi",
+      "wifi_band": "5 GHz",
+      "interface_type": "Wi-Fi 6 (802.11ax 80MHz)",
+      "parallel_capable": true,
+      "parallel_connections": [
+        { "band": "5 GHz Channel 44", "status": "Active" }
+      ],
+      "is_gateway": false
+    },
+    {
+      "id": "48:5F:99:AA:BB:CC",
+      "ip": "192.168.20.125",
+      "mac": "48:5F:99:AA:BB:CC",
+      "vendor": "Dell Inc.",
+      "hostname": "dell-precision-cad-ws",
+      "type": "Workstation PC / Laptop",
+      "status": "Active",
+      "rtt_ms": 2.8,
+      "open_ports": [22, 445, 3389],
+      "connection": "Ethernet (LAN)",
+      "wifi_band": "LAN",
+      "interface_type": "Intel 2.5GbE",
+      "parallel_capable": false,
+      "parallel_connections": [],
+      "is_gateway": false
+    },
+    {
+      "id": "64:16:7F:33:44:55",
+      "ip": "192.168.20.180",
+      "mac": "64:16:7F:33:44:55",
+      "vendor": "Samsung Electronics",
+      "hostname": "Galaxy-S24-Ultra-Branch",
+      "type": "Mobile Device",
+      "status": "Active",
+      "rtt_ms": 11.2,
+      "open_ports": [],
+      "connection": "Parallel Dual-Band (5G + 2.4G)",
+      "wifi_band": "Dual-Band",
+      "interface_type": "Wi-Fi 7 MLO Operation",
+      "parallel_capable": true,
+      "parallel_connections": [
+        { "band": "5 GHz Primary Link", "status": "Active" },
+        { "band": "2.4 GHz Auxiliary", "status": "Active" }
+      ],
+      "is_gateway": false
+    },
+    {
+      "id": "30:AE:A4:77:88:99",
+      "ip": "192.168.20.200",
+      "mac": "30:AE:A4:77:88:99",
+      "vendor": "Espressif Inc.",
+      "hostname": "hvac-temp-sensor-emea",
+      "type": "Smart Home / IoT",
+      "status": "Active",
+      "rtt_ms": 18.4,
+      "open_ports": [80],
+      "connection": "2.4 GHz Wi-Fi",
+      "wifi_band": "2.4 GHz",
+      "interface_type": "Wi-Fi 4 2.4G Low Power",
+      "parallel_capable": false,
+      "parallel_connections": [],
+      "is_gateway": false
+    }
+  ]
+}

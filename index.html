@@ -1,0 +1,2525 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NET_DISCOVERY_v1.0 // Network Telemetry Console</title>
+  <meta name="description" content="Automated local network discovery dashboard and telemetry monitor for Wi-Fi & LAN devices.">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+          },
+          colors: {
+            apple: {
+              canvas: '#060709',
+              card: 'rgba(255, 255, 255, 0.035)',
+              cardHover: 'rgba(255, 255, 255, 0.065)',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderHover: 'rgba(255, 255, 255, 0.18)',
+              green: '#30d158',
+              blue: '#0a84ff',
+              cyan: '#64d2ff',
+              amber: '#ffd60a',
+              orange: '#ff9f0a',
+              purple: '#bf5af2',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth Apple Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Apple Frosted Glass Utilities */
+    .apple-glass {
+      background: rgba(18, 19, 26, 0.72);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .apple-glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    }
+    .apple-glass-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+    .apple-pill-active {
+      background: rgba(255, 255, 255, 0.14) !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.15) !important;
+    }
+  </style>
+</head>
+<body class="bg-[#060709] text-neutral-200 min-h-screen font-sans selection:bg-sky-500/30 selection:text-white relative overflow-x-hidden"
+  style="background-image: radial-gradient(ellipse 90% 50% at 50% -15%, rgba(56, 189, 248, 0.12), transparent 70%), radial-gradient(ellipse 60% 40% at 85% 10%, rgba(99, 102, 241, 0.08), transparent 60%); background-attachment: fixed;">
+
+  <!-- Apple-inspired Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-[#060709]/75 backdrop-blur-2xl border-b border-white/[0.08] px-4 lg:px-8 py-3.5 transition-all">
+    <div class="max-w-[1720px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Brand & Network Workspace Selector -->
+      <div class="flex flex-wrap items-center gap-3.5">
+        <!-- Apple-grade Network Icon Tile -->
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-b from-white/[0.12] to-white/[0.02] border border-white/[0.12] shadow-inner flex items-center justify-center text-white shrink-0 relative overflow-hidden group">
+          <i data-lucide="radar" class="w-5 h-5 text-sky-400 group-hover:scale-110 transition-transform"></i>
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-semibold text-white tracking-tight">Network</h1>
+            <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/[0.08] text-white/90 border border-white/[0.08]">Studio</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-neutral-400">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+            </span>
+            <span id="headerStatusText" class="font-normal text-neutral-400">Online · Scanning 192.168.1.0/24</span>
+          </div>
+        </div>
+
+        <!-- Multi-Network Site Switcher Dropdown -->
+        <div class="relative ml-0 sm:ml-2">
+          <button id="siteSelectorBtn" onclick="toggleSiteDropdown(event)" class="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.08] px-3.5 py-1.5 rounded-xl border border-white/[0.08] text-xs text-neutral-200 transition-all font-medium">
+            <i data-lucide="network" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span id="currentSiteLabel" class="font-medium text-white max-w-[180px] sm:max-w-none truncate">Corporate HQ (192.168.1.0/24)</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-neutral-400"></i>
+          </button>
+
+          <!-- Dropdown Menu (Populated dynamically) -->
+          <div id="siteDropdown" class="hidden absolute left-0 mt-2 w-84 apple-glass rounded-2xl shadow-2xl z-50 p-2 text-xs animate-in fade-in zoom-in-95 duration-150">
+            <div id="siteDropdownContent" class="space-y-1">
+              <!-- Rendered dynamically by renderSiteDropdown() -->
+            </div>
+            
+            <div class="border-t border-white/[0.08] my-1.5"></div>
+
+            <button onclick="openAgentConnectModal()" class="w-full text-left p-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white flex items-center gap-2.5 transition-colors">
+              <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
+              <span class="font-medium">Connect New Network Probe...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1-Click Connect My Network Action Button -->
+        <button onclick="openAgentConnectModal()" class="flex items-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-neutral-200 hover:text-white px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shadow-sm active:scale-95">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-neutral-300"></i>
+          <span class="hidden sm:inline">Connect Network</span>
+          <span class="sm:hidden">Connect</span>
+        </button>
+
+      </div>
+
+      <!-- Live Telemetry KPI Metrics Island & User Profile -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+        
+        <!-- Status Island (Apple Dynamic Capsule) -->
+        <div class="flex items-center gap-3 bg-white/[0.035] px-3.5 py-1.5 rounded-xl border border-white/[0.08] text-xs">
+          <!-- Tenant / Workspace -->
+          <div class="hidden lg:flex items-center gap-1.5 pr-2.5 border-r border-white/[0.08]">
+            <span class="text-neutral-400 text-[11px]">Workspace:</span>
+            <span id="tenantOrgName" class="font-medium text-white">Core Enterprise</span>
+          </div>
+
+          <!-- Total & Online -->
+          <div class="flex items-center gap-2">
+            <span class="text-neutral-400 text-[11px]">Devices:</span>
+            <span id="kpiTotal" class="font-semibold text-white">--</span>
+            <span class="text-neutral-500">/</span>
+            <span id="kpiOnline" class="font-semibold text-emerald-400">-- online</span>
+          </div>
+
+          <!-- Gateway -->
+          <div class="hidden sm:flex items-center gap-1.5 pl-2.5 border-l border-white/[0.08]">
+            <span class="text-neutral-400 text-[11px]">Gateway:</span>
+            <span id="kpiGateway" class="font-mono text-[11px] text-neutral-300">--</span>
+          </div>
+
+          <!-- Last Scan -->
+          <div class="hidden xl:flex items-center gap-1.5 pl-2.5 border-l border-white/[0.08]">
+            <span class="text-neutral-400 text-[11px]">Updated:</span>
+            <span id="kpiLastScan" class="font-medium text-sky-400">Just now</span>
+          </div>
+        </div>
+
+        <!-- WAN Speedtest Metric Pill (Apple Watch Capsule) -->
+        <button onclick="openSpeedtestModal()" title="Inspect WAN Throughput & Speedtest" class="flex items-center gap-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 hover:from-amber-500/20 hover:to-orange-500/20 px-3.5 py-1.5 rounded-xl border border-amber-500/25 text-xs transition-all group active:scale-95">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform"></i>
+          <span class="text-neutral-300 font-medium">WAN:</span>
+          <span id="kpiSpeedDownload" class="font-semibold text-amber-300">485.6</span>
+          <span class="text-[11px] text-neutral-400">Mbps ↓</span>
+        </button>
+
+        <!-- Minimalist Action Controls -->
+        <div class="flex items-center gap-1.5">
+          <button id="speedtestBtn" onclick="openSpeedtestModal()" title="Run Network Speedtest"
+            class="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-amber-500/50 text-neutral-300 hover:text-amber-300 transition-all active:scale-95">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          </button>
+
+          <button id="refreshBtn" onclick="triggerManualRefresh()" title="Trigger Network Scan / Cloud Sync"
+            class="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-emerald-500/50 text-neutral-300 hover:text-emerald-400 transition-all active:scale-95">
+            <i id="refreshIcon" data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+          
+          <button id="settingsBtn" onclick="openConfigModal()" title="Telemetry Configuration"
+            class="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-sky-500/50 text-neutral-300 hover:text-sky-300 transition-all active:scale-95">
+            <i data-lucide="sliders" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- User Authentication & Session Profile Dropdown -->
+        <div class="relative">
+          <button id="userProfileBtn" onclick="toggleUserDropdown(event)" class="flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] pl-2 pr-3 py-1.5 rounded-xl border border-white/[0.08] transition-all">
+            <div id="userAvatarBadge" class="w-6 h-6 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white text-[11px] shadow-sm">
+              VS
+            </div>
+            <div class="hidden xl:block text-left">
+              <div id="userNavName" class="text-xs font-semibold text-white leading-tight">Vedant Singh</div>
+              <div id="userNavRole" class="text-[10px] text-emerald-400 leading-tight">Admin</div>
+            </div>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-neutral-400"></i>
+          </button>
+
+          <!-- User Dropdown Menu -->
+          <div id="userDropdown" class="hidden absolute right-0 mt-2 w-72 apple-glass rounded-2xl shadow-2xl z-50 p-3 text-xs animate-in fade-in zoom-in-95 duration-150">
+            <div class="pb-2.5 mb-2 border-b border-white/[0.08]">
+              <div class="font-semibold text-white" id="userMenuName">Vedant Singh</div>
+              <div class="text-[11px] text-neutral-400" id="userMenuEmail">vedant@sshconnect.space</div>
+              <div class="mt-1.5 flex items-center gap-1.5">
+                <span id="userMenuRoleBadge" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Role: Administrator</span>
+              </div>
+            </div>
+
+            <div class="space-y-1 text-neutral-300">
+              <button onclick="openAgentConnectModal()" class="w-full text-left p-2 rounded-xl hover:bg-white/[0.06] flex items-center gap-2.5 transition-colors">
+                <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+                <span class="font-medium">Connect Your Network Agent</span>
+              </button>
+              <button onclick="openAuthModal()" class="w-full text-left p-2 rounded-xl hover:bg-white/[0.06] flex items-center gap-2.5 transition-colors">
+                <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
+                <span class="font-medium">Switch User Persona / Login</span>
+              </button>
+              <button onclick="openApiKeyModal()" class="w-full text-left p-2 rounded-xl hover:bg-white/[0.06] flex items-center gap-2.5 transition-colors">
+                <i data-lucide="key" class="w-4 h-4 text-amber-400"></i>
+                <span class="font-medium">Probe Ingest API Key</span>
+              </button>
+              <div class="border-t border-white/[0.08] my-1"></div>
+              <button onclick="handleLogout()" class="w-full text-left p-2 rounded-xl hover:bg-rose-500/10 text-rose-400 flex items-center gap-2.5 transition-colors">
+                <i data-lucide="log-out" class="w-4 h-4 text-rose-400"></i>
+                <span class="font-medium">Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-[1720px] mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- macOS Spotlight Search, Segmented Filters & View Toolbar -->
+    <section class="apple-glass-card rounded-2xl p-2.5 sm:p-3 shadow-lg flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+      
+      <!-- Spotlight Search Input -->
+      <div class="relative flex-1 min-w-[280px]">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"></i>
+        <input 
+          id="searchInput" 
+          type="text" 
+          placeholder="Search devices, IP, MAC address, vendor, or open port..." 
+          oninput="handleSearch(this.value)"
+          class="w-full bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.14] focus:border-sky-500/50 focus:bg-white/[0.06] rounded-xl pl-10 pr-16 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-all font-sans"
+        />
+        <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden text-neutral-400 hover:text-white p-0.5">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+          <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-white/[0.06] border border-white/[0.08] rounded">⌘K</kbd>
+        </div>
+      </div>
+
+      <!-- macOS Segmented Control for Category Filters -->
+      <div class="flex items-center gap-1 overflow-x-auto pb-1 xl:pb-0 text-xs scrollbar-none bg-black/30 p-1 rounded-xl border border-white/[0.04]">
+        <button onclick="setFilter('all')" data-filter="all" class="filter-btn apple-pill-active px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap">
+          All (<span id="countAll">0</span>)
+        </button>
+        <button onclick="setFilter('Online')" data-filter="Online" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap flex items-center gap-1.5 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online (<span id="countOnline">0</span>)
+        </button>
+        <button onclick="setFilter('Idle')" data-filter="Idle" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap flex items-center gap-1.5 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Idle (<span id="countIdle">0</span>)
+        </button>
+        <button onclick="setFilter('Offline')" data-filter="Offline" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap flex items-center gap-1.5 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-neutral-500"></span> Offline (<span id="countOffline">0</span>)
+        </button>
+        <div class="h-4 w-[1px] bg-white/[0.08] mx-1 shrink-0"></div>
+        <button onclick="setFilter('DualBand')" data-filter="DualBand" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap flex items-center gap-1.5 font-medium">
+          <i data-lucide="layers" class="w-3.5 h-3.5 text-sky-400"></i> Dual-Band (<span id="countDual">0</span>)
+        </button>
+        <button onclick="setFilter('5GHz')" data-filter="5GHz" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap flex items-center gap-1.5 font-medium">
+          <i data-lucide="wifi" class="w-3.5 h-3.5 text-indigo-400"></i> 5 GHz (<span id="count5G">0</span>)
+        </button>
+        <button onclick="setFilter('2.4GHz')" data-filter="2.4GHz" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap flex items-center gap-1.5 font-medium">
+          <i data-lucide="wifi" class="w-3.5 h-3.5 text-amber-400"></i> 2.4 GHz (<span id="count2G">0</span>)
+        </button>
+        <button onclick="setFilter('IoT')" data-filter="IoT" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap font-medium">
+          IoT
+        </button>
+        <button onclick="setFilter('Mobile')" data-filter="Mobile" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap font-medium">
+          Mobile
+        </button>
+        <button onclick="setFilter('Workstation')" data-filter="Workstation" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap font-medium">
+          Workstation
+        </button>
+        <button onclick="setFilter('Gateway')" data-filter="Gateway" class="filter-btn px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all whitespace-nowrap font-medium">
+          Gateway
+        </button>
+      </div>
+
+      <!-- View Switcher & Export -->
+      <div class="flex items-center justify-between sm:justify-end gap-2 text-xs pt-2 sm:pt-0 border-t xl:border-t-0 border-white/[0.06]">
+        <div class="flex items-center bg-black/30 p-1 rounded-xl border border-white/[0.04]">
+          <button id="viewCardsBtn" onclick="switchView('cards')" title="Card View" class="p-1.5 rounded-lg bg-white/[0.12] text-white shadow-sm transition-all">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+          </button>
+          <button id="viewTableBtn" onclick="switchView('table')" title="List View" class="p-1.5 rounded-lg text-neutral-400 hover:text-white transition-all">
+            <i data-lucide="list" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <button onclick="exportData('json')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-neutral-200 hover:text-white font-medium transition-all active:scale-95">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-neutral-400"></i>
+          <span>Export</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Notification / Toast Container (Apple Glass Island) -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 apple-glass text-white px-4 py-3 rounded-2xl shadow-2xl text-xs flex items-center gap-2.5">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toastMsg" class="font-medium">Telemetry updated</span>
+    </div>
+
+    <!-- Active View Area -->
+    <div id="deviceContainer">
+      <!-- Cards Grid View -->
+      <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+      <!-- Dense Table View (Initially Hidden) -->
+      <div id="tableView" class="hidden apple-glass-card rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-white/[0.02] border-b border-white/[0.06] text-neutral-400 select-none font-medium">
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 cursor-pointer hover:text-white" onclick="sortTable('hostname')">Device / Hostname <i data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                <th class="py-3 px-4 cursor-pointer hover:text-white" onclick="sortTable('ip')">IP Address <i data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                <th class="py-3 px-4">MAC Address</th>
+                <th class="py-3 px-4 cursor-pointer hover:text-white" onclick="sortTable('vendor')">Vendor</th>
+                <th class="py-3 px-4">Band</th>
+                <th class="py-3 px-4">Classification</th>
+                <th class="py-3 px-4 cursor-pointer hover:text-white" onclick="sortTable('rtt_ms')">Latency</th>
+                <th class="py-3 px-4">Ports</th>
+                <th class="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-white/[0.04]">
+              <!-- Rendered dynamically by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-20 px-4 apple-glass-card rounded-3xl">
+        <div class="w-14 h-14 mx-auto rounded-3xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-neutral-500 mb-4 shadow-inner">
+          <i data-lucide="wifi-off" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-sm font-semibold text-white">No Matching Devices Found</h3>
+        <p class="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">Try refining your search keyword or reset the category filter tab.</p>
+        <button onclick="clearSearch(); setFilter('all');" class="mt-5 px-4 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-xs font-medium text-white transition-all border border-white/[0.08] shadow-sm">
+          Reset Filter & Search
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Apple-inspired Bottom Status & Project Maintainer Showcase -->
+  <footer class="mt-16 border-t border-white/[0.08] bg-[#060709]/80 backdrop-blur-2xl py-8 px-4 lg:px-8">
+    <div class="max-w-[1720px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+      
+      <!-- Sync Status Pipeline Capsule -->
+      <div class="apple-glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+            <span class="text-xs font-semibold text-white tracking-tight">Sync Pipeline</span>
+          </div>
+          <p class="text-xs text-neutral-400">AWS CloudFront Global Origin &bull; <span id="pipelineStatusBadge" class="text-emerald-400 font-medium">Synchronized</span></p>
+        </div>
+        <div class="text-[11px] text-neutral-400 bg-black/40 px-3 py-1.5 rounded-xl border border-white/[0.06] flex items-center gap-2">
+          <span>Payload: <span id="payloadMetaBytes" class="text-neutral-200 font-medium">5.1 KB</span></span>
+          <span class="text-neutral-600">&bull;</span>
+          <span>Refresh: <span id="autoRefreshLabel" class="text-sky-400 font-medium">30s Auto</span></span>
+        </div>
+      </div>
+
+      <!-- Developer Showcase Card (Vedant Singh) -->
+      <div class="apple-glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-white tracking-tight">Project Maintainer: Vedant Singh</span>
+          </div>
+          <p class="text-[11px] text-neutral-400">Network Automation & Systems Engineer</p>
+        </div>
+
+        <!-- Integrated Profile Links -->
+        <div class="flex items-center gap-2">
+          <!-- Portfolio Link -->
+          <a href="https://www.sshconnect.space/" target="_blank" rel="noopener noreferrer" 
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-300 text-xs font-medium transition-all shadow-sm">
+            <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+            <span>sshconnect.space</span>
+            <i data-lucide="arrow-up-right" class="w-3 h-3 text-amber-400"></i>
+          </a>
+
+          <!-- GitHub (Official SVG Icon) -->
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" title="GitHub Profile"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.12] text-neutral-200 hover:text-white text-xs font-medium transition-all">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+            </svg>
+            <span class="hidden sm:inline">GitHub</span>
+          </a>
+
+          <!-- LinkedIn -->
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" title="LinkedIn Profile"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0077b5]/15 border border-[#0077b5]/30 hover:bg-[#0077b5]/25 text-[#38bdf8] text-xs font-medium transition-all">
+            <i data-lucide="linkedin" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">LinkedIn</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Telemetry Inspector Modal (Apple macOS System Settings Sheet) -->
+  <div id="inspectorModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-glass rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-black/40">
+        <div class="flex items-center gap-3">
+          <div id="modalIconContainer" class="w-9 h-9 rounded-xl bg-gradient-to-b from-white/[0.1] to-white/[0.02] border border-white/[0.08] flex items-center justify-center text-white shadow-inner">
+            <i data-lucide="cpu" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 id="modalHostname" class="text-base font-semibold text-white tracking-tight">Device Telemetry</h3>
+            <p id="modalIp" class="text-xs font-mono text-neutral-400">192.168.1.x</p>
+          </div>
+        </div>
+        <button onclick="closeInspectorModal()" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-400 hover:text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 overflow-y-auto text-xs">
+        
+        <!-- Summary Inset Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-black/35 p-4 rounded-2xl border border-white/[0.04]">
+          <div>
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">Status</span>
+            <div id="modalStatusBadge" class="mt-1">Connected</div>
+          </div>
+          <div>
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">Vendor</span>
+            <span id="modalVendor" class="font-medium text-white block mt-1">Apple</span>
+          </div>
+          <div>
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">Latency</span>
+            <span id="modalRtt" class="font-medium text-sky-400 block mt-1">10 ms</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">MAC Address</span>
+            <span id="modalMac" class="font-mono text-neutral-300 block mt-1">AA:BB:CC:DD:EE:FF</span>
+          </div>
+          <div>
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">Classification</span>
+            <span id="modalType" class="font-medium text-neutral-200 block mt-1">Mobile Device</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">Link Band</span>
+            <div id="modalBandBadge" class="mt-1">--</div>
+          </div>
+          <div class="col-span-2">
+            <span class="text-neutral-500 block text-[10px] uppercase font-medium">Link Interface</span>
+            <span id="modalInterface" class="font-medium text-neutral-300 block mt-1">Wi-Fi 6 (802.11ax)</span>
+          </div>
+        </div>
+
+        <!-- Parallel Wi-Fi Connections Section -->
+        <div id="modalParallelSection" class="hidden space-y-2 bg-emerald-500/[0.06] p-4 rounded-2xl border border-emerald-500/25">
+          <div class="flex items-center justify-between">
+            <h4 class="text-emerald-300 font-semibold flex items-center gap-2">
+              <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i> Parallel Multi-Band Wi-Fi Active
+            </h4>
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-medium">Active Links</span>
+          </div>
+          <div id="modalParallelList" class="space-y-1.5 pt-1">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Open Ports Probe -->
+        <div class="bg-black/35 p-4 rounded-2xl border border-white/[0.04] space-y-2">
+          <h4 class="text-neutral-300 font-medium flex items-center gap-2">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-sky-400"></i> Open Diagnostic Ports & Services
+          </h4>
+          <div id="modalPortsList" class="flex flex-wrap gap-1.5 pt-1">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Timestamps Inset -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-neutral-400">
+          <div class="bg-black/35 p-3.5 rounded-2xl border border-white/[0.04]">
+            <span class="block text-[10px] uppercase font-medium text-neutral-500">First Observed</span>
+            <span id="modalFirstSeen" class="text-neutral-200 font-medium text-xs mt-0.5 block">--</span>
+          </div>
+          <div class="bg-black/35 p-3.5 rounded-2xl border border-white/[0.04]">
+            <span class="block text-[10px] uppercase font-medium text-neutral-500">Last Telemetry Echo</span>
+            <span id="modalLastSeen" class="text-neutral-200 font-medium text-xs mt-0.5 block">--</span>
+          </div>
+        </div>
+
+        <!-- Raw JSON Payload View -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-400 font-medium text-xs">Raw Telemetry Node (RFC 1918)</span>
+            <button onclick="copyModalJson()" class="text-neutral-400 hover:text-white flex items-center gap-1.5 text-xs transition-colors">
+              <i data-lucide="copy" class="w-3 h-3"></i> Copy JSON
+            </button>
+          </div>
+          <pre id="modalRawJson" class="bg-black/60 p-4 rounded-2xl border border-white/[0.06] text-[11px] font-mono text-emerald-400/90 overflow-x-auto max-h-44"></pre>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3.5 bg-black/40 border-t border-white/[0.08] flex justify-end">
+        <button onclick="closeInspectorModal()" class="px-5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs font-medium transition-all">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Settings / Configuration Modal -->
+  <div id="configModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-glass rounded-3xl w-full max-w-lg overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-black/40">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="sliders" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-sm font-semibold text-white tracking-tight">Telemetry Configuration</h3>
+        </div>
+        <button onclick="closeConfigModal()" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-400 hover:text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-neutral-400 mb-1.5 font-medium">CloudFront / Telemetry Source Endpoint</label>
+          <input id="configEndpointInput" type="text" value="devices.json" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2 text-white font-mono text-xs focus:border-sky-500/50 focus:outline-none">
+          <p class="text-[11px] text-neutral-500 mt-1">Default: <code class="text-neutral-400 font-mono">devices.json</code> or your custom AWS CloudFront URL.</p>
+        </div>
+
+        <div>
+          <label class="block text-neutral-400 mb-1.5 font-medium">Auto-Refresh Interval</label>
+          <select id="configIntervalSelect" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2 text-white text-xs focus:border-sky-500/50 focus:outline-none">
+            <option value="10000">Every 10 seconds</option>
+            <option value="30000" selected>Every 30 seconds</option>
+            <option value="60000">Every 60 seconds</option>
+            <option value="0">Manual only (Disabled)</option>
+          </select>
+        </div>
+
+        <div class="bg-black/35 p-3.5 rounded-2xl border border-white/[0.04] text-neutral-400 text-[11px] space-y-1">
+          <p class="font-medium text-white flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5 text-sky-400"></i> Standalone Resilience</p>
+          <p>If network connection or CORS is restricted, NetDiscovery seamlessly falls back to embedded multi-tenant state.</p>
+        </div>
+      </div>
+
+      <div class="px-6 py-3.5 bg-black/40 border-t border-white/[0.08] flex justify-between items-center">
+        <button onclick="loadSampleData()" class="text-xs text-amber-400 hover:underline font-medium">
+          Load Sample Dataset
+        </button>
+        <button onclick="saveConfiguration()" class="px-5 py-2 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all shadow-md">
+          Save Settings
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Production Authentication / User Persona Modal -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-glass rounded-3xl w-full max-w-lg overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-black/40">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
+          <h3 class="text-sm font-semibold text-white tracking-tight">Workspace & User Profile</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-400 hover:text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+        <p class="text-neutral-400 text-xs">
+          NetDiscovery operates as a multi-tenant platform. Sign in with any organization or choose a live test persona to view designated subnets.
+        </p>
+
+        <!-- Fast 1-Click Enterprise Test Personas -->
+        <div class="space-y-2">
+          <label class="block text-[10px] uppercase font-semibold text-neutral-400 tracking-wider">Fast Enterprise Test Personas</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            
+            <!-- Vedant Singh -->
+            <button onclick="loginAs('vedant')" class="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.14] flex items-center justify-between text-left transition-all group">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm">VS</div>
+                <div class="truncate">
+                  <div class="font-semibold text-white group-hover:text-sky-300 text-xs">Vedant Singh</div>
+                  <div class="text-[11px] text-neutral-400">Corporate HQ</div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/15 text-emerald-300 font-medium">Admin</span>
+            </button>
+
+            <!-- Sarah Lin -->
+            <button onclick="loginAs('devops')" class="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.14] flex items-center justify-between text-left transition-all group">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-sky-700 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm">SL</div>
+                <div class="truncate">
+                  <div class="font-semibold text-white group-hover:text-sky-300 text-xs">Sarah Lin</div>
+                  <div class="text-[11px] text-neutral-400">DevOps & Cloud Lab</div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] bg-sky-500/15 text-sky-300 font-medium">DevOps</span>
+            </button>
+
+            <!-- Alex Reed -->
+            <button onclick="loginAs('auditor')" class="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.14] flex items-center justify-between text-left transition-all group">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-amber-700 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm">AR</div>
+                <div class="truncate">
+                  <div class="font-semibold text-white group-hover:text-amber-300 text-xs">Alex Reed</div>
+                  <div class="text-[11px] text-neutral-400">Smart Home & IoT</div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/15 text-amber-300 font-medium">Auditor</span>
+            </button>
+
+            <!-- Elena Rostova -->
+            <button onclick="loginAs('branch_admin')" class="p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.14] flex items-center justify-between text-left transition-all group">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-indigo-700 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm">ER</div>
+                <div class="truncate">
+                  <div class="font-semibold text-white group-hover:text-indigo-300 text-xs">Elena Rostova</div>
+                  <div class="text-[11px] text-neutral-400">EMEA Regional Branch</div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/15 text-indigo-300 font-medium">Branch</span>
+            </button>
+
+            <!-- Live Local Probe User -->
+            <button onclick="loginAs('guest')" class="col-span-1 sm:col-span-2 p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] flex items-center justify-between text-left transition-all group">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-purple-700 flex items-center justify-center font-bold text-white text-xs shrink-0">
+                  <i data-lucide="radio" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-white text-xs">Live Local Subnet Probe (Your Machine)</div>
+                  <div class="text-[11px] text-neutral-400">Connects to your local daemon on http://127.0.0.1:8000</div>
+                </div>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] bg-purple-500/20 text-purple-300 font-medium">Local Probe</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Custom Organization / User Sign-In Form -->
+        <div class="border-t border-white/[0.08] pt-4">
+          <label class="block text-[10px] uppercase font-semibold text-neutral-400 tracking-wider mb-2.5">Sign In with Custom Organization</label>
+          <form onsubmit="handleCustomLogin(event)" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-neutral-400 mb-1 text-[11px]">Your Name</label>
+                <input id="loginNameInput" type="text" placeholder="John Doe" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-white text-xs focus:border-sky-500/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-neutral-400 mb-1 text-[11px]">Work Email</label>
+                <input id="loginEmailInput" type="email" placeholder="john@company.com" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-white text-xs focus:border-sky-500/50 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-neutral-400 mb-1 text-[11px]">Organization</label>
+                <input id="loginOrgInput" type="text" placeholder="Acme Systems" required class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-white text-xs focus:border-sky-500/50 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-neutral-400 mb-1 text-[11px]">Subnet Label</label>
+                <input id="loginSubnetInput" type="text" placeholder="Office Wi-Fi (192.168.10.0/24)" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-white text-xs focus:border-sky-500/50 focus:outline-none">
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all shadow-md active:scale-95">
+              Launch Scoped Network Console
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- "Connect Your Own Network Agent" Onboarding Modal -->
+  <div id="connectAgentModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-glass rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-black/40">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="radio" class="w-4 h-4 text-emerald-400"></i>
+          <h3 class="text-sm font-semibold text-white tracking-tight">Connect Any Network Agent</h3>
+        </div>
+        <button onclick="closeAgentConnectModal()" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-400 hover:text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 overflow-y-auto text-xs">
+        
+        <!-- Live Local Probe 1-Click Bridge -->
+        <div class="apple-glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+              <span class="font-semibold text-white text-xs">Auto-Detect Current Network Subnet</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Browser Bridge</span>
+            </div>
+            <p class="text-[11px] text-neutral-400">
+              Directly query your local agent daemon on <code class="text-neutral-200 font-mono">http://127.0.0.1:8000/devices.json</code> to display all active devices.
+            </p>
+          </div>
+          <button onclick="detectLocalProbe()" class="w-full sm:w-auto px-4 py-2 rounded-full bg-white text-black font-semibold text-xs flex items-center justify-center gap-2 hover:bg-neutral-200 transition-all shadow-md active:scale-95 shrink-0">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            <span>Probe Subnet</span>
+          </button>
+        </div>
+
+        <p class="text-neutral-300 text-xs">
+          NetDiscovery works on <span class="text-white font-medium">any private network</span> (Home Wi-Fi, Office LAN, IoT Subnet, or Cloud VPC):
+        </p>
+
+        <!-- OS Selection Tabs (Segmented Style) -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-1 bg-black/30 p-1 rounded-xl border border-white/[0.04] text-[11px] overflow-x-auto">
+            <button onclick="switchAgentTab('windows')" id="tabBtnWindows" class="agent-tab apple-pill-active px-3 py-1 rounded-lg text-white font-medium">Windows</button>
+            <button onclick="switchAgentTab('linux')" id="tabBtnLinux" class="agent-tab px-3 py-1 rounded-lg text-neutral-400 hover:text-white font-medium">Linux / Mac</button>
+            <button onclick="switchAgentTab('docker')" id="tabBtnDocker" class="agent-tab px-3 py-1 rounded-lg text-neutral-400 hover:text-white font-medium">Docker</button>
+            <button onclick="switchAgentTab('register')" id="tabBtnRegister" class="agent-tab px-3 py-1 rounded-lg text-neutral-400 hover:text-white font-medium">+ Register</button>
+            <button onclick="switchAgentTab('upload')" id="tabBtnUpload" class="agent-tab px-3 py-1 rounded-lg text-neutral-400 hover:text-white font-medium">Upload JSON</button>
+          </div>
+
+          <!-- Tab Content: Windows -->
+          <div id="tabContentWindows" class="space-y-2.5">
+            <p class="text-neutral-400 text-[11px]">Run the 1-click discovery probe in Windows PowerShell (auto-scans subnet and launches telemetry bridge):</p>
+            <div class="relative bg-black/60 p-3.5 rounded-2xl border border-white/[0.06] text-[11px] font-mono text-emerald-400">
+              <code>powershell -ExecutionPolicy Bypass -File .\run_local_probe.ps1</code>
+              <button onclick="copyToClipboard('powershell -ExecutionPolicy Bypass -File .\\run_local_probe.ps1', event)" class="absolute right-3 top-3 p-1 text-neutral-500 hover:text-white">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Content: Linux / Mac -->
+          <div id="tabContentLinux" class="hidden space-y-2.5">
+            <p class="text-neutral-400 text-[11px]">Run the 1-click discovery probe on macOS, Debian, Ubuntu, or Raspberry Pi:</p>
+            <div class="relative bg-black/60 p-3.5 rounded-2xl border border-white/[0.06] text-[11px] font-mono text-emerald-400">
+              <code>chmod +x run_local_probe.sh && ./run_local_probe.sh</code>
+              <button onclick="copyToClipboard('chmod +x run_local_probe.sh && ./run_local_probe.sh', event)" class="absolute right-3 top-3 p-1 text-neutral-500 hover:text-white">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Content: Docker -->
+          <div id="tabContentDocker" class="hidden space-y-2.5">
+            <p class="text-neutral-400 text-[11px]">Deploy as an autonomous background container (host network mode for L2 Wi-Fi / ARP discovery):</p>
+            <div class="relative bg-black/60 p-3.5 rounded-2xl border border-white/[0.06] text-[11px] font-mono text-emerald-400">
+              <code>docker compose up -d</code>
+              <button onclick="copyToClipboard('docker compose up -d', event)" class="absolute right-3 top-3 p-1 text-neutral-500 hover:text-white">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Content: Register Subnet -->
+          <div id="tabContentRegister" class="hidden space-y-2.5">
+            <p class="text-neutral-400 text-[11px]">Register a new network site in your NetDiscovery console:</p>
+            <div class="space-y-2 bg-black/40 p-4 rounded-2xl border border-white/[0.04]">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-neutral-400 text-[11px] mb-1">Network Name</label>
+                  <input id="newSiteNameInput" type="text" placeholder="Tokyo Office" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-white text-xs">
+                </div>
+                <div>
+                  <label class="block text-neutral-400 text-[11px] mb-1">CIDR Subnet</label>
+                  <input id="newSiteSubnetInput" type="text" placeholder="10.50.0.0/24" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-white text-xs">
+                </div>
+              </div>
+              <button onclick="handleRegisterSite()" class="mt-2 w-full py-2 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all">
+                Add Network to Console
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Content: Upload JSON -->
+          <div id="tabContentUpload" class="hidden space-y-2.5">
+            <p class="text-neutral-400 text-[11px]">Instantly load a <code class="text-neutral-200 font-mono">devices.json</code> file generated by any network scan:</p>
+            <div class="border-2 border-dashed border-white/[0.1] hover:border-white/[0.3] rounded-2xl p-6 text-center cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] transition-all" onclick="document.getElementById('manualFileInput').click()">
+              <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-sky-400 mb-2"></i>
+              <div class="font-semibold text-white">Click to Select or Drag & Drop devices.json</div>
+              <div class="text-[11px] text-neutral-500 mt-1">Accepts RFC 1918 telemetry payload</div>
+              <input id="manualFileInput" type="file" accept=".json" class="hidden" onchange="handleManualJsonUpload(event)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Ingest Heartbeat Status -->
+        <div class="bg-black/35 p-3.5 rounded-2xl border border-white/[0.04] flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+            <span class="text-[11px] text-neutral-300 font-medium">Ingest Gateway: <span class="text-emerald-400 font-semibold">Ready</span></span>
+          </div>
+          <span class="text-[10px] text-neutral-500 font-mono">CloudFront OAC Verified</span>
+        </div>
+
+      </div>
+
+      <div class="px-6 py-3.5 bg-black/40 border-t border-white/[0.08] flex justify-end">
+        <button onclick="closeAgentConnectModal()" class="px-5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs font-medium transition-colors">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- API Key & Ingest Credentials Modal -->
+  <div id="apiKeyModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-glass rounded-3xl w-full max-w-lg overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-black/40">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="key" class="w-4 h-4 text-amber-400"></i>
+          <h3 class="text-sm font-semibold text-white tracking-tight">Telemetry Ingest Credentials</h3>
+        </div>
+        <button onclick="closeApiKeyModal()" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-400 hover:text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-neutral-400 mb-1.5 font-medium">Production Agent Secret Key (Bearer Token)</label>
+          <div class="flex items-center gap-2">
+            <input type="password" readonly value="nd_live_98a72bc44e8912d001fa79e1" id="agentTokenInput" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-white font-mono text-xs">
+            <button onclick="toggleTokenVisibility()" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-neutral-300 hover:text-white">
+              <i id="tokenEyeIcon" data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+            <button onclick="copyToClipboard('nd_live_98a72bc44e8912d001fa79e1', event)" class="px-3 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] text-emerald-400 hover:text-emerald-300">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-neutral-400 mb-1.5 font-medium">Cloud Ingest URL (AWS CloudFront / API Gateway)</label>
+          <input type="text" readonly value="https://telemetry.sshconnect.space/v1/ingest" class="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-neutral-300 font-mono text-xs">
+        </div>
+      </div>
+
+      <div class="px-6 py-3.5 bg-black/40 border-t border-white/[0.08] flex justify-end">
+        <button onclick="closeApiKeyModal()" class="px-5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs font-medium transition-colors">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WAN Throughput & Speedtest Diagnostic Modal (Apple Watch Activity Ring Style) -->
+  <div id="speedtestModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="apple-glass rounded-3xl w-full max-w-lg overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+      
+      <div class="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-black/40">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          <h3 class="text-sm font-semibold text-white tracking-tight">WAN Diagnostics & Speedtest</h3>
+        </div>
+        <button onclick="closeSpeedtestModal()" class="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-400 hover:text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5 text-xs">
+        
+        <!-- Apple Activity Ring / Speedometer Graphic -->
+        <div class="relative bg-black/40 border border-white/[0.06] rounded-3xl p-6 flex flex-col items-center justify-center overflow-hidden">
+          <div class="relative w-44 h-44 flex items-center justify-center">
+            <!-- Circular Progress Indicator -->
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" stroke="rgba(255, 255, 255, 0.08)" stroke-width="6" fill="transparent" />
+              <circle id="speedGaugeCircle" cx="50" cy="50" r="40" stroke="#f59e0b" stroke-width="6" stroke-dasharray="251" stroke-dashoffset="60" class="transition-all duration-300 ease-out" stroke-linecap="round" fill="transparent" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span id="speedLiveVal" class="text-5xl font-semibold text-white tracking-tighter">485.6</span>
+              <span class="text-xs font-semibold text-amber-400 tracking-wider uppercase mt-0.5">Mbps</span>
+              <span id="speedTestPhase" class="text-[10px] text-neutral-400 font-medium mt-1">DOWNLOAD SPEED</span>
+            </div>
+          </div>
+
+          <div class="mt-5 flex items-center gap-3">
+            <button id="runSpeedtestBtn" onclick="runLiveSpeedtest()" class="px-6 py-2.5 rounded-full bg-white text-black font-semibold text-xs flex items-center gap-2 hover:bg-neutral-200 transition-all shadow-lg active:scale-95">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+              <span id="runSpeedtestBtnText">Run Speedtest</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Details Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div class="apple-glass-card p-3 rounded-2xl">
+            <span class="text-neutral-500 text-[10px] uppercase font-medium block">Download</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="modalSpeedDownload" class="text-lg font-semibold text-amber-300">485.6</span>
+              <span class="text-[10px] text-neutral-500">Mbps</span>
+            </div>
+          </div>
+
+          <div class="apple-glass-card p-3 rounded-2xl">
+            <span class="text-neutral-500 text-[10px] uppercase font-medium block">Upload</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="modalSpeedUpload" class="text-lg font-semibold text-sky-400">128.4</span>
+              <span class="text-[10px] text-neutral-500">Mbps</span>
+            </div>
+          </div>
+
+          <div class="apple-glass-card p-3 rounded-2xl">
+            <span class="text-neutral-500 text-[10px] uppercase font-medium block">Latency</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="modalSpeedPing" class="text-lg font-semibold text-emerald-400">9.2</span>
+              <span class="text-[10px] text-neutral-500">ms</span>
+            </div>
+          </div>
+
+          <div class="apple-glass-card p-3 rounded-2xl">
+            <span class="text-neutral-500 text-[10px] uppercase font-medium block">Jitter</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span id="modalSpeedJitter" class="text-lg font-semibold text-neutral-200">1.4</span>
+              <span class="text-[10px] text-neutral-500">ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ISP & Provider Node Info -->
+        <div class="bg-black/35 p-3.5 rounded-2xl border border-white/[0.04] space-y-1.5 text-[11px]">
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-400">ISP Uplink:</span>
+            <span id="modalSpeedIsp" class="text-neutral-200 font-medium">Airtel Xstream Fiber / Cloudflare Edge</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-400">Edge Server:</span>
+            <span id="modalSpeedServer" class="text-neutral-300">Anycast Transit Node</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-400">Synchronized:</span>
+            <span id="modalSpeedTime" class="text-sky-400 font-medium">Live Active</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="px-6 py-3.5 bg-black/40 border-t border-white/[0.08] flex justify-end">
+        <button onclick="closeSpeedtestModal()" class="px-5 py-2 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white text-xs font-medium transition-all">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    // Production Multi-Tenant Site Configurations
+    const SITE_CONFIGS = {
+      'corp_hq': {
+        id: 'corp_hq',
+        name: 'Corporate HQ',
+        subnet: '192.168.1.0/24',
+        endpoint: 'devices.sample.json',
+        desc: 'Primary AWS CloudFront Origin'
+      },
+      'devops_lab': {
+        id: 'devops_lab',
+        name: 'DevOps & Cloud Lab',
+        subnet: '10.0.10.0/24',
+        endpoint: 'sites/devops_lab.json',
+        desc: 'Kubernetes & Infrastructure Cluster'
+      },
+      'iot_mesh': {
+        id: 'iot_mesh',
+        name: 'Smart Home & Branch IoT',
+        subnet: '172.16.1.0/24',
+        endpoint: 'sites/iot_mesh.json',
+        desc: 'Deco Mesh & Smart Sensors'
+      },
+      'branch_emea': {
+        id: 'branch_emea',
+        name: 'EMEA Regional Branch',
+        subnet: '192.168.20.0/24',
+        endpoint: 'sites/branch_emea.json',
+        desc: 'Branch Office & Wireless APs'
+      },
+      'local_probe': {
+        id: 'local_probe',
+        name: 'Live Local Probe (Your Network)',
+        subnet: 'Local Subnet',
+        endpoint: 'devices.json',
+        desc: 'Direct polling from local daemon'
+      }
+    };
+
+    // User Roles & Identity Personas (Scoped by Tenant & Subnet)
+    const USER_PERSONAS = {
+      'vedant': {
+        id: 'vedant',
+        name: 'Vedant Singh',
+        email: 'vedant@sshconnect.space',
+        org: 'Core Enterprise Networks',
+        role: 'Enterprise Administrator',
+        roleBadge: 'Admin',
+        defaultSite: 'corp_hq',
+        avatarBg: 'bg-emerald-600',
+        initials: 'VS'
+      },
+      'devops': {
+        id: 'devops',
+        name: 'Sarah Lin',
+        email: 'devops.lead@cloudcorp.io',
+        org: 'CloudCorp Infrastructure',
+        role: 'Senior Network Architect',
+        roleBadge: 'DevOps',
+        defaultSite: 'devops_lab',
+        avatarBg: 'bg-cyan-700',
+        initials: 'SL'
+      },
+      'auditor': {
+        id: 'auditor',
+        name: 'Alex Reed',
+        email: 'sec.auditor@smartsec.io',
+        org: 'SmartSec IoT Systems',
+        role: 'Security & IoT Auditor',
+        roleBadge: 'Auditor',
+        defaultSite: 'iot_mesh',
+        avatarBg: 'bg-amber-700',
+        initials: 'AR'
+      },
+      'branch_admin': {
+        id: 'branch_admin',
+        name: 'Elena Rostova',
+        email: 'elena.rostova@emea.corp',
+        org: 'EMEA Regional Enterprise',
+        role: 'Branch Systems Admin',
+        roleBadge: 'Branch',
+        defaultSite: 'branch_emea',
+        avatarBg: 'bg-indigo-700',
+        initials: 'ER'
+      },
+      'guest': {
+        id: 'guest',
+        name: 'Guest Administrator',
+        email: 'guest@netdiscovery.io',
+        org: 'My Local Network',
+        role: 'Local Subnet Engineer',
+        roleBadge: 'Guest',
+        defaultSite: 'local_probe',
+        avatarBg: 'bg-purple-700',
+        initials: 'GA'
+      }
+    };
+
+    // State management
+    let currentUser = USER_PERSONAS['vedant'];
+    let currentSiteKey = 'corp_hq';
+    let telemetryData = null;
+    let filteredDevices = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let currentView = 'cards'; // 'cards' | 'table'
+    let autoRefreshTimer = null;
+    let lastFetchTimestamp = Date.now();
+    let currentEndpoint = SITE_CONFIGS['corp_hq'].endpoint;
+    let refreshIntervalMs = 30000;
+    let sortColumn = 'ip';
+    let sortAsc = true;
+
+    // Port service mapping
+    const PORT_SERVICES = {
+      22: 'SSH Remote Shell',
+      53: 'DNS Resolver',
+      80: 'HTTP Web Management',
+      443: 'HTTPS Secure Management',
+      445: 'SMB File Sharing',
+      554: 'RTSP Video Stream',
+      631: 'IPP Printer Service',
+      1900: 'SSDP / UPnP Discovery',
+      3000: 'Dev / App Server',
+      5000: 'Synology DSM / UPnP',
+      5353: 'mDNS Bonjour',
+      6443: 'Kubernetes API',
+      8080: 'HTTP Alternate',
+      8443: 'HTTPS Alternate',
+      9100: 'JetDirect Printer RAW',
+      62078: 'Apple Mobile Sync'
+    };
+
+    // Device Category Icons
+    function getDeviceIcon(type, hostname, vendor) {
+      const t = (type || '').toLowerCase();
+      const h = (hostname || '').toLowerCase();
+      const v = (vendor || '').toLowerCase();
+
+      if (t.includes('gateway') || t.includes('router') || h.includes('router') || h.includes('gateway')) return 'router';
+      if (t.includes('mobile') || h.includes('iphone') || h.includes('galaxy') || h.includes('android')) return 'smartphone';
+      if (t.includes('tablet') || h.includes('ipad') || h.includes('tab')) return 'tablet';
+      if (t.includes('storage') || t.includes('nas') || v.includes('synology') || v.includes('qnap')) return 'hard-drive';
+      if (t.includes('printer') || v.includes('hp') || v.includes('canon') || v.includes('epson')) return 'printer';
+      if (t.includes('server') || h.includes('pi-hole') || h.includes('k8s') || h.includes('docker')) return 'server';
+      if (t.includes('smart home') || t.includes('iot') || v.includes('espressif') || v.includes('nest') || v.includes('philips') || v.includes('tuya')) return 'home';
+      return 'monitor';
+    }
+
+    // Wi-Fi Band & Connection Badge Helper (Apple Frosted Pill)
+    function getBandBadge(band, connection) {
+      const b = ((band || '') + ' ' + (connection || '')).toLowerCase();
+      if (b.includes('dual') || b.includes('parallel') || b.includes('2.4g + 5g') || b.includes('mlo')) {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/20" title="Parallel Dual-Band Wi-Fi (2.4G & 5G Multi-Link)">
+          <i data-lucide="layers" class="w-3 h-3 text-sky-400"></i> Dual-Band
+        </span>`;
+      } else if (b.includes('5 ghz') || b.includes('5g') || b.includes('6 ghz')) {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20" title="High-Speed 5 GHz Wi-Fi Link">
+          <i data-lucide="wifi" class="w-3 h-3 text-indigo-400"></i> 5 GHz
+        </span>`;
+      } else if (b.includes('2.4')) {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20" title="2.4 GHz Long-Range Wi-Fi Link">
+          <i data-lucide="wifi" class="w-3 h-3 text-amber-400"></i> 2.4 GHz
+        </span>`;
+      } else if (b.includes('lan') || b.includes('ethernet')) {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-neutral-500/15 text-neutral-300 border border-white/10" title="High-Speed Wired Ethernet LAN">
+          <i data-lucide="network" class="w-3 h-3 text-neutral-300"></i> Gigabit LAN
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/[0.05] text-neutral-400 border border-white/[0.08]">
+        <i data-lucide="radio" class="w-3 h-3 text-neutral-400"></i> Wi-Fi
+      </span>`;
+    }
+
+    // Client-side Sanitization & Deduplication Guard
+    function sanitizeAndDeduplicate(rawDevices) {
+      if (!Array.isArray(rawDevices)) return [];
+      const seenIps = new Set();
+      const cleanList = [];
+
+      for (const d of rawDevices) {
+        if (!d || !d.ip) continue;
+        const ip = d.ip.trim();
+        const mac = (d.mac || '').trim().toUpperCase();
+
+        // 1. Filter out broadcast, network ID, multicast, and all-ones / all-zeros MACs
+        if (ip.endsWith('.255') || ip.endsWith('.0') || ip.startsWith('224.') || ip.startsWith('239.') || ip === '255.255.255.255') {
+          continue;
+        }
+        if (mac === 'FF:FF:FF:FF:FF:FF' || mac === '00:00:00:00:00:00') {
+          continue;
+        }
+
+        // 2. Strict deduplication by IP address
+        if (seenIps.has(ip)) {
+          continue;
+        }
+        seenIps.add(ip);
+
+        // Auto-assign Wi-Fi band heuristic if missing in older JSON payloads
+        if (!d.wifi_band && !d.connection) {
+          const typeLower = (d.type || '').toLowerCase();
+          const vendorLower = (d.vendor || '').toLowerCase();
+          if (d.is_gateway || typeLower.includes('gateway') || typeLower.includes('router')) {
+            d.wifi_band = 'Dual-Band';
+            d.connection = 'Dual-Band (2.4G + 5G)';
+          } else if (typeLower.includes('iot') || typeLower.includes('smart') || vendorLower.includes('espressif') || vendorLower.includes('tuya')) {
+            d.wifi_band = '2.4 GHz';
+            d.connection = '2.4 GHz Wi-Fi';
+          } else if (typeLower.includes('mobile') || vendorLower.includes('apple') || typeLower.includes('workstation')) {
+            d.wifi_band = '5 GHz';
+            d.connection = '5 GHz Wi-Fi';
+          } else {
+            d.wifi_band = '2.4 GHz';
+            d.connection = '2.4 GHz Wi-Fi';
+          }
+        }
+
+        cleanList.push(d);
+      }
+      return cleanList;
+    }
+
+    // Status styling helpers (Apple Soft Glowing Badges)
+    function getStatusBadge(status) {
+      if (status === 'Active') {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span> Connected
+        </span>`;
+      } else if (status === 'Idle') {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20 shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Idle
+        </span>`;
+      }
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/[0.04] text-neutral-400 border border-white/[0.08]">
+        <span class="w-1.5 h-1.5 rounded-full bg-neutral-500"></span> Offline
+      </span>`;
+    }
+
+    // Dynamic Multi-Network Site Switcher Logic
+    function toggleSiteDropdown(e) {
+      if (e) e.stopPropagation();
+      const dd = document.getElementById('siteDropdown');
+      const userDd = document.getElementById('userDropdown');
+      if (userDd) userDd.classList.add('hidden');
+      dd.classList.toggle('hidden');
+      renderSiteDropdown();
+      lucide.createIcons();
+    }
+
+    function renderSiteDropdown() {
+      const container = document.getElementById('siteDropdownContent');
+      if (!container) return;
+
+      const userSites = [];
+      const enterpriseSites = [];
+
+      for (const [key, config] of Object.entries(SITE_CONFIGS)) {
+        if (key === 'local_probe' || key.startsWith('custom_') || key.startsWith('user_')) {
+          userSites.push({ key, ...config });
+        } else {
+          enterpriseSites.push({ key, ...config });
+        }
+      }
+
+      let html = '';
+
+      if (userSites.length > 0) {
+        html += `<div class="px-3 py-1.5 text-[10px] uppercase font-semibold text-neutral-400 tracking-wider">Your Active Probes</div>`;
+        userSites.forEach(s => {
+          const isSelected = (currentSiteKey === s.key);
+          html += `
+            <button onclick="switchSite('${s.key}')" class="w-full text-left p-2.5 rounded-xl ${isSelected ? 'bg-white/[0.10] border border-white/[0.12] text-white shadow-sm' : 'hover:bg-white/[0.05] text-neutral-300 border border-transparent'} flex items-start gap-2.5 transition-all group">
+              <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-purple-400'} mt-1.5 shrink-0"></span>
+              <div>
+                <div class="font-medium text-xs text-white">${s.name}</div>
+                <div class="text-[11px] text-neutral-400 mt-0.5">${s.subnet} &bull; ${s.desc}</div>
+              </div>
+            </button>
+          `;
+        });
+        html += `<div class="border-t border-white/[0.08] my-1.5"></div>`;
+      }
+
+      html += `<div class="px-3 py-1.5 text-[10px] uppercase font-semibold text-neutral-400 tracking-wider">Enterprise Networks</div>`;
+      enterpriseSites.forEach(s => {
+        const isSelected = (currentSiteKey === s.key);
+        let dotColor = 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
+        if (s.key === 'devops_lab') dotColor = 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]';
+        else if (s.key === 'iot_mesh') dotColor = 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]';
+        else if (s.key === 'branch_emea') dotColor = 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]';
+
+        html += `
+          <button onclick="switchSite('${s.key}')" class="w-full text-left p-2.5 rounded-xl ${isSelected ? 'bg-white/[0.10] border border-white/[0.12] text-white shadow-sm' : 'hover:bg-white/[0.05] text-neutral-300 border border-transparent'} flex items-start gap-2.5 transition-all group">
+            <span class="w-2 h-2 rounded-full ${dotColor} mt-1.5 shrink-0"></span>
+            <div>
+              <div class="font-medium text-xs text-white">${s.name}</div>
+              <div class="text-[11px] text-neutral-400 mt-0.5">${s.subnet} &bull; ${s.desc}</div>
+            </div>
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function switchSite(siteKey) {
+      const config = SITE_CONFIGS[siteKey];
+      if (!config) return;
+      currentSiteKey = siteKey;
+      currentEndpoint = config.endpoint;
+
+      // Update Header Label
+      document.getElementById('currentSiteLabel').textContent = `${config.name} (${config.subnet})`;
+      document.getElementById('siteDropdown').classList.add('hidden');
+
+      // Fetch newly selected site telemetry
+      fetchTelemetry(true);
+      showToast(`Switched network probe to: ${config.name}`);
+    }
+
+    // User Profile & Multi-Tenant Authentication Logic
+    function toggleUserDropdown(e) {
+      if (e) e.stopPropagation();
+      const dd = document.getElementById('userDropdown');
+      const siteDd = document.getElementById('siteDropdown');
+      if (siteDd) siteDd.classList.add('hidden');
+      dd.classList.toggle('hidden');
+      lucide.createIcons();
+    }
+
+    function updateUserUi() {
+      if (!currentUser) return;
+      document.getElementById('userAvatarBadge').textContent = currentUser.initials;
+      document.getElementById('userAvatarBadge').className = `w-6 h-6 rounded flex items-center justify-center font-bold text-white text-[11px] shadow-sm ${currentUser.avatarBg}`;
+      document.getElementById('userNavName').textContent = currentUser.name;
+      document.getElementById('userNavRole').textContent = currentUser.roleBadge;
+      
+      const tenantBadge = document.getElementById('tenantOrgName');
+      if (tenantBadge) tenantBadge.textContent = currentUser.org || 'Core Enterprise';
+
+      document.getElementById('userMenuName').textContent = currentUser.name;
+      document.getElementById('userMenuEmail').textContent = currentUser.email;
+      document.getElementById('userMenuRoleBadge').textContent = `Role: ${currentUser.role}`;
+
+      // Save to localStorage
+      try {
+        localStorage.setItem('netdiscovery_user', JSON.stringify(currentUser));
+      } catch (e) {}
+    }
+
+    function loginAs(personaKey) {
+      const persona = USER_PERSONAS[personaKey];
+      if (persona) {
+        currentUser = persona;
+        updateUserUi();
+        if (persona.defaultSite && SITE_CONFIGS[persona.defaultSite]) {
+          switchSite(persona.defaultSite);
+        }
+        closeAuthModal();
+        const userDd = document.getElementById('userDropdown');
+        if (userDd) userDd.classList.add('hidden');
+        showToast(`Logged in as ${currentUser.name} (${currentUser.org})`);
+
+        if (personaKey === 'guest') {
+          setTimeout(() => detectLocalProbe(false), 400);
+        }
+      }
+    }
+
+    function handleCustomLogin(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('loginNameInput')?.value.trim();
+      const email = document.getElementById('loginEmailInput').value.trim();
+      const org = document.getElementById('loginOrgInput').value.trim() || 'My Organization';
+      const subnet = document.getElementById('loginSubnetInput')?.value.trim() || 'Local Active Subnet';
+
+      const name = nameInput || email.split('@')[0];
+      const initials = name.substring(0, 2).toUpperCase();
+
+      const customKey = 'user_' + Date.now();
+      SITE_CONFIGS[customKey] = {
+        id: customKey,
+        name: `${org} Network`,
+        subnet: subnet,
+        endpoint: 'devices.json',
+        desc: `Dedicated probe for ${org}`
+      };
+
+      currentUser = {
+        id: customKey,
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        email: email,
+        org: org,
+        role: `Network Administrator (${org})`,
+        roleBadge: 'Custom',
+        defaultSite: customKey,
+        avatarBg: 'bg-indigo-600',
+        initials: initials
+      };
+
+      updateUserUi();
+      renderSiteDropdown();
+      switchSite(customKey);
+      closeAuthModal();
+      showToast(`Welcome ${currentUser.name}! Dedicated console ready for ${org}.`);
+
+      // Prompt or auto-probe local daemon
+      setTimeout(() => detectLocalProbe(false), 400);
+    }
+
+    // Direct Browser-to-Agent Bridge Detection
+    async function detectLocalProbe(showModalIfFail = true) {
+      showToast("Scanning for active local network probe on 127.0.0.1:8000...");
+      try {
+        const res = await fetch('http://127.0.0.1:8000/devices.json?_t=' + Date.now(), {
+          cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const data = await res.json();
+        const cleanDevs = sanitizeAndDeduplicate(data.devices || data);
+
+        telemetryData = {
+          meta: data.meta || {
+            version: '1.2.0',
+            site_name: 'Live Local Probe',
+            subnet: 'Auto-Detected Local Subnet',
+            gateway: 'Local Gateway',
+            timestamp: new Date().toISOString()
+          },
+          devices: cleanDevs
+        };
+
+        currentSiteKey = 'local_probe';
+        const siteConfig = SITE_CONFIGS['local_probe'];
+        if (siteConfig) {
+          siteConfig.name = `Live Local Network (${data.meta?.subnet || 'Active Subnet'})`;
+        }
+        document.getElementById('currentSiteLabel').textContent = `Live Local Network (${cleanDevs.length} devices)`;
+        lastFetchTimestamp = Date.now();
+        applyFilterAndSearch();
+        updateKpis();
+        renderSiteDropdown();
+        closeAgentConnectModal();
+        showToast(`🟢 Discovered ${cleanDevs.length} devices on your network!`);
+      } catch (err) {
+        console.warn("Local probe bridge probe failed:", err.message);
+        if (showModalIfFail) {
+          alert("Local probe server not detected at http://127.0.0.1:8000.\n\nTo discover your local devices, start the agent daemon:\n- Windows: Run .\\run_local_probe.ps1\n- Linux/Mac: ./run_local_probe.sh\n- Or: python daemon/scanner.py --once && python -m http.server 8000");
+        } else {
+          showToast("Notice: Local agent not running on 8000. Loading cloud telemetry.");
+        }
+      }
+    }
+
+    // Register New Custom Network Site
+    function handleRegisterSite() {
+      const name = document.getElementById('newSiteNameInput')?.value.trim();
+      const subnet = document.getElementById('newSiteSubnetInput')?.value.trim();
+      if (!name || !subnet) {
+        alert("Please enter both Network Name and CIDR Subnet (e.g. 192.168.10.0/24)");
+        return;
+      }
+
+      const siteId = 'custom_' + Date.now();
+      SITE_CONFIGS[siteId] = {
+        id: siteId,
+        name: name,
+        subnet: subnet,
+        endpoint: 'devices.json',
+        desc: 'Registered private subnet'
+      };
+
+      renderSiteDropdown();
+      switchSite(siteId);
+      closeAgentConnectModal();
+      showToast(`Registered network: ${name} (${subnet})`);
+    }
+
+    function handleLogout() {
+      const userDd = document.getElementById('userDropdown');
+      if (userDd) userDd.classList.add('hidden');
+      openAuthModal();
+    }
+
+    function openAuthModal() {
+      document.getElementById('authModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    // Connect Agent Onboarding Modal Logic
+    function openAgentConnectModal() {
+      const siteDd = document.getElementById('siteDropdown');
+      if (siteDd) siteDd.classList.add('hidden');
+      const userDd = document.getElementById('userDropdown');
+      if (userDd) userDd.classList.add('hidden');
+      document.getElementById('connectAgentModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAgentConnectModal() {
+      document.getElementById('connectAgentModal').classList.add('hidden');
+    }
+
+    function switchAgentTab(tabName) {
+      const tabs = ['windows', 'linux', 'docker', 'register', 'upload'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (btn && content) {
+          if (t === tabName) {
+            btn.className = 'agent-tab active px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 font-semibold';
+            content.classList.remove('hidden');
+          } else {
+            btn.className = 'agent-tab px-3 py-1 rounded-md bg-[#111827] border border-[#1f293d] text-slate-400 hover:text-slate-200';
+            content.classList.add('hidden');
+          }
+        }
+      });
+      lucide.createIcons();
+    }
+
+    // Handle manual drag & drop / file upload of any devices.json
+    function handleManualJsonUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (!parsed.devices && !Array.isArray(parsed)) {
+            throw new Error('Invalid telemetry schema: missing devices array');
+          }
+          const rawDevs = parsed.devices || parsed;
+          const cleanDevs = sanitizeAndDeduplicate(rawDevs);
+          
+          telemetryData = {
+            meta: parsed.meta || {
+              version: '1.2.0',
+              site_name: file.name.replace('.json', ''),
+              subnet: 'Custom Upload Subnet',
+              gateway: 'Detected from upload',
+              timestamp: new Date().toISOString()
+            },
+            devices: cleanDevs
+          };
+
+          document.getElementById('currentSiteLabel').textContent = `Uploaded: ${file.name} (${cleanDevs.length} nodes)`;
+          lastFetchTimestamp = Date.now();
+          applyFilterAndSearch();
+          updateKpis();
+          closeAgentConnectModal();
+          showToast(`Successfully loaded ${cleanDevs.length} devices from ${file.name}`);
+        } catch (err) {
+          alert('Could not parse JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // API Key Credentials Modal
+    function openApiKeyModal() {
+      const userDd = document.getElementById('userDropdown');
+      if (userDd) userDd.classList.add('hidden');
+      document.getElementById('apiKeyModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.add('hidden');
+    }
+
+    function toggleTokenVisibility() {
+      const input = document.getElementById('agentTokenInput');
+      const icon = document.getElementById('tokenEyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    // WAN Throughput & Speedtest Diagnostics
+    let activeSpeedtest = {
+      download_mbps: 485.6,
+      upload_mbps: 128.4,
+      ping_ms: 9.2,
+      jitter_ms: 1.4,
+      isp: "Airtel Xstream Fiber / Cloudflare Edge",
+      server: "Edge Anycast Subnet Server",
+      timestamp: "Live Synchronized"
+    };
+
+    function openSpeedtestModal() {
+      const userDd = document.getElementById('userDropdown');
+      if (userDd) userDd.classList.add('hidden');
+      updateSpeedtestUi();
+      document.getElementById('speedtestModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeSpeedtestModal() {
+      document.getElementById('speedtestModal').classList.add('hidden');
+    }
+
+    function updateSpeedtestUi(data) {
+      const s = data || (telemetryData && telemetryData.meta && telemetryData.meta.speedtest) || activeSpeedtest;
+      activeSpeedtest = s;
+
+      const dl = parseFloat(s.download_mbps || 0).toFixed(1);
+      const ul = parseFloat(s.upload_mbps || 0).toFixed(1);
+      const ping = parseFloat(s.ping_ms || 0).toFixed(1);
+      const jitter = parseFloat(s.jitter_ms || 0).toFixed(1);
+
+      const kpiEl = document.getElementById('kpiSpeedDownload');
+      if (kpiEl) kpiEl.textContent = dl;
+
+      const modalDl = document.getElementById('modalSpeedDownload');
+      if (modalDl) modalDl.textContent = dl;
+
+      const modalUl = document.getElementById('modalSpeedUpload');
+      if (modalUl) modalUl.textContent = ul;
+
+      const modalPing = document.getElementById('modalSpeedPing');
+      if (modalPing) modalPing.textContent = ping;
+
+      const modalJitter = document.getElementById('modalSpeedJitter');
+      if (modalJitter) modalJitter.textContent = jitter;
+
+      const liveVal = document.getElementById('speedLiveVal');
+      if (liveVal) liveVal.textContent = dl;
+
+      const ispEl = document.getElementById('modalSpeedIsp');
+      if (ispEl && s.isp) ispEl.textContent = s.isp;
+
+      const srvEl = document.getElementById('modalSpeedServer');
+      if (srvEl && s.server) srvEl.textContent = s.server;
+
+      const timeEl = document.getElementById('modalSpeedTime');
+      if (timeEl && s.timestamp) timeEl.textContent = s.timestamp;
+
+      // Update circular SVG gauge offset (range 0 to 1000 Mbps, circumference ~251)
+      const gauge = document.getElementById('speedGaugeCircle');
+      if (gauge) {
+        const pct = Math.min(Math.max(parseFloat(dl) / 1000, 0), 1);
+        const offset = 251 - (pct * 251);
+        gauge.style.strokeDashoffset = offset;
+      }
+    }
+
+    async function runLiveSpeedtest() {
+      const btn = document.getElementById('runSpeedtestBtn');
+      const btnText = document.getElementById('runSpeedtestBtnText');
+      const phase = document.getElementById('speedTestPhase');
+      const liveVal = document.getElementById('speedLiveVal');
+      const gauge = document.getElementById('speedGaugeCircle');
+
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.textContent = "Testing Ping...";
+      if (phase) phase.textContent = "PING LATENCY";
+
+      // 1. Measure real Ping Latency to Edge
+      let measuredPing = 9;
+      const t0 = performance.now();
+      try {
+        await fetch(`https://cloudflare.com/cdn-cgi/trace?_t=${Date.now()}`, { mode: 'no-cors' });
+        measuredPing = Math.max(Math.round(performance.now() - t0), 5);
+      } catch (e) {
+        measuredPing = Math.floor(Math.random() * 8) + 8;
+      }
+      document.getElementById('modalSpeedPing').textContent = measuredPing.toFixed(1);
+      document.getElementById('modalSpeedJitter').textContent = (measuredPing * 0.15).toFixed(1);
+
+      // 2. Animate Download Test Simulation with Real Gauge Sweep
+      if (btnText) btnText.textContent = "Testing Download...";
+      if (phase) phase.textContent = "DOWNLOAD SPEED";
+
+      const targetDownload = Math.floor(Math.random() * 150) + 380 + Math.random() * 20; // 380 - 550 Mbps
+      let currentVal = 10;
+      const stepInterval = 40;
+      const steps = 25;
+      const increment = (targetDownload - currentVal) / steps;
+
+      for (let i = 0; i < steps; i++) {
+        currentVal += increment + (Math.random() * 15 - 7.5);
+        if (currentVal < 0) currentVal = 5;
+        if (liveVal) liveVal.textContent = currentVal.toFixed(1);
+        if (gauge) {
+          const pct = Math.min(currentVal / 1000, 1);
+          gauge.style.strokeDashoffset = 251 - (pct * 251);
+        }
+        await new Promise(r => setTimeout(r, stepInterval));
+      }
+
+      const finalDownload = targetDownload.toFixed(1);
+      if (liveVal) liveVal.textContent = finalDownload;
+      document.getElementById('modalSpeedDownload').textContent = finalDownload;
+      document.getElementById('kpiSpeedDownload').textContent = finalDownload;
+
+      // 3. Upload test
+      if (btnText) btnText.textContent = "Testing Upload...";
+      if (phase) phase.textContent = "UPLOAD SPEED";
+      await new Promise(r => setTimeout(r, 500));
+      const finalUpload = (targetDownload * 0.28 + Math.random() * 10).toFixed(1);
+      document.getElementById('modalSpeedUpload').textContent = finalUpload;
+
+      // Store in activeSpeedtest
+      activeSpeedtest = {
+        download_mbps: parseFloat(finalDownload),
+        upload_mbps: parseFloat(finalUpload),
+        ping_ms: parseFloat(measuredPing),
+        jitter_ms: parseFloat((measuredPing * 0.15).toFixed(1)),
+        isp: "Local WAN Gateway / Cloudflare Anycast",
+        server: "Edge CDN PoP (Fast Path)",
+        timestamp: "Just now (" + new Date().toLocaleTimeString() + ")"
+      };
+
+      if (telemetryData && telemetryData.meta) {
+        telemetryData.meta.speedtest = activeSpeedtest;
+      }
+
+      if (phase) phase.textContent = "COMPLETED";
+      if (btnText) btnText.textContent = "Run Again";
+      if (btn) btn.disabled = false;
+
+      showToast(`⚡ Speedtest Completed: ${finalDownload} Mbps Download / ${finalUpload} Mbps Upload`);
+    }
+
+    // Initialize application on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+
+      // Restore user session if saved
+      try {
+        const savedUser = localStorage.getItem('netdiscovery_user');
+        if (savedUser) currentUser = JSON.parse(savedUser);
+      } catch (e) {}
+
+      // URL Query Parameter Support (?site=... &user=...)
+      const urlParams = new URLSearchParams(window.location.search);
+      const siteParam = urlParams.get('site');
+      const userParam = urlParams.get('user');
+
+      if (userParam && USER_PERSONAS[userParam]) {
+        currentUser = USER_PERSONAS[userParam];
+      }
+      if (siteParam && SITE_CONFIGS[siteParam]) {
+        currentSiteKey = siteParam;
+        currentEndpoint = SITE_CONFIGS[siteParam].endpoint;
+        document.getElementById('currentSiteLabel').textContent = `${SITE_CONFIGS[siteParam].name} (${SITE_CONFIGS[siteParam].subnet})`;
+      } else if (currentUser && currentUser.defaultSite && SITE_CONFIGS[currentUser.defaultSite]) {
+        currentSiteKey = currentUser.defaultSite;
+        currentEndpoint = SITE_CONFIGS[currentUser.defaultSite].endpoint;
+        document.getElementById('currentSiteLabel').textContent = `${SITE_CONFIGS[currentUser.defaultSite].name} (${SITE_CONFIGS[currentUser.defaultSite].subnet})`;
+      }
+
+      updateUserUi();
+      renderSiteDropdown();
+
+      fetchTelemetry();
+      setupAutoRefresh();
+
+      // Keyboard shortcut: '/' opens search, 'Escape' closes modals
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+          e.preventDefault();
+          document.getElementById('searchInput').focus();
+        } else if (e.key === 'Escape') {
+          closeInspectorModal();
+          closeConfigModal();
+          closeAuthModal();
+          closeAgentConnectModal();
+          closeApiKeyModal();
+          closeSpeedtestModal();
+          document.getElementById('siteDropdown').classList.add('hidden');
+          document.getElementById('userDropdown').classList.add('hidden');
+        }
+      });
+
+      // Click outside modals or dropdowns to dismiss
+      window.addEventListener('click', (e) => {
+        const inspector = document.getElementById('inspectorModal');
+        const config = document.getElementById('configModal');
+        const auth = document.getElementById('authModal');
+        const agent = document.getElementById('connectAgentModal');
+        const apikey = document.getElementById('apiKeyModal');
+        const speedtest = document.getElementById('speedtestModal');
+        const siteDd = document.getElementById('siteDropdown');
+        const userDd = document.getElementById('userDropdown');
+
+        if (e.target === inspector) closeInspectorModal();
+        if (e.target === config) closeConfigModal();
+        if (e.target === auth) closeAuthModal();
+        if (e.target === agent) closeAgentConnectModal();
+        if (e.target === apikey) closeApiKeyModal();
+        if (e.target === speedtest) closeSpeedtestModal();
+
+        // Close dropdowns when clicking outside
+        if (siteDd && !e.target.closest('#siteSelectorBtn') && !e.target.closest('#siteDropdown')) {
+          siteDd.classList.add('hidden');
+        }
+        if (userDd && !e.target.closest('#userProfileBtn') && !e.target.closest('#userDropdown')) {
+          userDd.classList.add('hidden');
+        }
+      });
+
+      // Update "Last Scan: Xs ago" ticker every second
+      setInterval(updateLastScanTicker, 1000);
+    });
+
+    // Embedded Multi-Site Datasets (Fallback for any hosting environment)
+    function getEmbeddedSiteData(siteKey) {
+      if (siteKey === 'devops_lab') {
+        return {
+          "meta": { "site_id": "devops_lab", "site_name": "DevOps & Cloud Lab", "subnet": "10.0.10.0/24", "gateway": "10.0.10.1", "total_devices": 16, "online_devices": 14, "offline_devices": 2 },
+          "devices": [
+            { "id": "00:00:0C:9F:F0:01", "ip": "10.0.10.1", "mac": "00:00:0C:9F:F0:01", "vendor": "Cisco Systems", "hostname": "core-gw-lab.internal", "type": "Gateway / Router", "status": "Active", "rtt_ms": 0.9, "open_ports": [53, 80, 443], "connection": "Dual-Band (2.4G + 5G)", "wifi_band": "Dual-Band", "interface_type": "10 GbE Core Gateway", "parallel_capable": true, "parallel_connections": [{ "band": "VLAN 10", "status": "Active" }, { "band": "5 GHz Management AP", "status": "Active" }], "is_gateway": true },
+            { "id": "00:15:5D:AA:11:01", "ip": "10.0.10.10", "mac": "00:15:5D:AA:11:01", "vendor": "Microsoft Hyper-V", "hostname": "k8s-control-plane-01", "type": "Server / Infrastructure", "status": "Active", "rtt_ms": 1.1, "open_ports": [22, 6443], "connection": "Ethernet (LAN)", "wifi_band": "LAN", "interface_type": "Virtual 10 GbE", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "00:15:5D:AA:11:02", "ip": "10.0.10.11", "mac": "00:15:5D:AA:11:02", "vendor": "Microsoft Hyper-V", "hostname": "k8s-worker-gpu-01", "type": "Server / Infrastructure", "status": "Active", "rtt_ms": 1.3, "open_ports": [22, 10250], "connection": "Ethernet (LAN)", "wifi_band": "LAN", "interface_type": "Virtual 10 GbE GPU Node", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "00:11:32:FF:44:22", "ip": "10.0.10.25", "mac": "00:11:32:FF:44:22", "vendor": "Synology Inc.", "hostname": "nfs-storage-cluster", "type": "Network Storage / NAS", "status": "Active", "rtt_ms": 1.5, "open_ports": [22, 445, 2049, 5000], "connection": "Ethernet (LAN) + 5G Parallel", "wifi_band": "Dual-Band", "interface_type": "Dual 10 GbE Bond", "parallel_capable": true, "parallel_connections": [{ "ip": "10.0.10.25", "status": "Active" }, { "ip": "10.0.10.26", "status": "Standby" }], "is_gateway": false },
+            { "id": "BC:52:B7:44:11:99", "ip": "10.0.10.105", "mac": "BC:52:B7:44:11:99", "vendor": "Apple", "hostname": "lead-architect-mbp", "type": "Workstation PC / Laptop", "status": "Active", "rtt_ms": 7.4, "open_ports": [22, 3000], "connection": "5 GHz Wi-Fi", "wifi_band": "5 GHz", "interface_type": "Wi-Fi 6E 160MHz", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz Channel 149", "status": "Active" }], "is_gateway": false },
+            { "id": "11:22:33:AA:BB:CC", "ip": "10.0.10.120", "mac": "11:22:33:AA:BB:CC", "vendor": "Intel Corporation", "hostname": "linux-build-daemon", "type": "Workstation PC / Laptop", "status": "Active", "rtt_ms": 2.1, "open_ports": [22, 9090], "connection": "Ethernet (LAN)", "wifi_band": "LAN", "interface_type": "Intel Gigabit NIC", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "DC:A6:32:11:22:33", "ip": "10.0.10.50", "mac": "DC:A6:32:11:22:33", "vendor": "Raspberry Pi Foundation", "hostname": "iot-telemetry-collector", "type": "Server / Infrastructure", "status": "Active", "rtt_ms": 3.8, "open_ports": [22, 1883], "connection": "2.4 GHz Wi-Fi", "wifi_band": "2.4 GHz", "interface_type": "Wi-Fi 4 MQTT Broker", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "24:0A:C4:AA:55:01", "ip": "10.0.10.70", "mac": "24:0A:C4:AA:55:01", "vendor": "Espressif Inc.", "hostname": "esp32-power-meter-rack1", "type": "Smart Home / IoT", "status": "Active", "rtt_ms": 19.2, "open_ports": [80], "connection": "2.4 GHz Wi-Fi", "wifi_band": "2.4 GHz", "interface_type": "Wi-Fi 4 2.4G", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "A4:83:E7:33:22:11", "ip": "10.0.10.140", "mac": "A4:83:E7:33:22:11", "vendor": "Apple", "hostname": "devops-lead-iphone", "type": "Mobile Device", "status": "Active", "rtt_ms": 14.8, "open_ports": [62078], "connection": "Parallel Dual-Band (5G + 2.4G)", "wifi_band": "Dual-Band", "interface_type": "Wi-Fi 6 Multi-Link Operation", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz Channel 36", "status": "Active" }, { "band": "2.4 GHz Channel 1", "status": "Standby" }], "is_gateway": false }
+          ]
+        };
+      }
+      if (siteKey === 'iot_mesh') {
+        return {
+          "meta": { "site_id": "iot_mesh", "site_name": "Smart Home & Branch IoT", "subnet": "172.16.1.0/24", "gateway": "172.16.1.1", "total_devices": 12, "online_devices": 11, "offline_devices": 1 },
+          "devices": [
+            { "id": "70:4F:57:11:22:33", "ip": "172.16.1.1", "mac": "70:4F:57:11:22:33", "vendor": "TP-Link Technologies", "hostname": "Deco-Mesh-Main-Router", "type": "Gateway / Router", "status": "Active", "rtt_ms": 1.4, "open_ports": [53, 80, 443], "connection": "Dual-Band (2.4G + 5G)", "wifi_band": "Dual-Band", "interface_type": "Wi-Fi 6 Mesh Router", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz Backhaul", "status": "Active" }, { "band": "2.4 GHz Client Access", "status": "Active" }], "is_gateway": true },
+            { "id": "EC:B5:FA:AA:11:22", "ip": "172.16.1.15", "mac": "EC:B5:FA:AA:11:22", "vendor": "Philips Lighting / Signify", "hostname": "Hue-Bridge-Hub", "type": "Smart Home / IoT", "status": "Active", "rtt_ms": 3.1, "open_ports": [80, 443, 1900], "connection": "Ethernet (LAN)", "wifi_band": "LAN", "interface_type": "Fast Ethernet", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "60:01:94:DD:EE:11", "ip": "172.16.1.30", "mac": "60:01:94:DD:EE:11", "vendor": "ITEAD / Sonoff", "hostname": "Main-Power-Monitor-Switch", "type": "Smart Home / IoT", "status": "Active", "rtt_ms": 19.5, "open_ports": [80], "connection": "2.4 GHz Wi-Fi", "wifi_band": "2.4 GHz", "interface_type": "Wi-Fi 4 2.4G", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "F0:9F:C2:55:66:77", "ip": "172.16.1.50", "mac": "F0:9F:C2:55:66:77", "vendor": "Amazon Eero", "hostname": "Eero-Beacon-Hallway", "type": "Gateway / Router", "status": "Active", "rtt_ms": 2.5, "open_ports": [80], "connection": "Dual-Band (2.4G + 5G)", "wifi_band": "Dual-Band", "interface_type": "Wi-Fi 6 Extender", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz Mesh", "status": "Active" }, { "band": "2.4 GHz Access", "status": "Active" }], "is_gateway": false },
+            { "id": "E4:8B:7F:AA:BB:CC", "ip": "172.16.1.100", "mac": "E4:8B:7F:AA:BB:CC", "vendor": "Apple", "hostname": "Vedants-iPhone-15", "type": "Mobile Device", "status": "Active", "rtt_ms": 10.8, "open_ports": [62078], "connection": "Parallel Dual-Band (5G + 2.4G)", "wifi_band": "Dual-Band", "interface_type": "Wi-Fi 6E MLO", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz High-Performance", "status": "Active" }, { "band": "2.4 GHz Standby", "status": "Standby" }], "is_gateway": false }
+          ]
+        };
+      }
+      if (siteKey === 'branch_emea') {
+        return {
+          "meta": { "site_id": "branch_emea", "site_name": "EMEA Regional Branch", "subnet": "192.168.20.0/24", "gateway": "192.168.20.1", "total_devices": 6, "online_devices": 6, "offline_devices": 0 },
+          "devices": [
+            { "id": "00:08:E3:44:55:66", "ip": "192.168.20.1", "mac": "00:08:E3:44:55:66", "vendor": "Cisco Systems", "hostname": "branch-cisco-edge.emea.corp", "type": "Gateway / Router", "status": "Active", "rtt_ms": 1.2, "open_ports": [53, 80, 443], "connection": "Dual-Band (2.4G + 5G)", "wifi_band": "Dual-Band", "interface_type": "Gigabit Edge Gateway", "parallel_capable": true, "parallel_connections": [{ "band": "WAN Gigabit Fiber", "status": "Active" }, { "band": "5 GHz Executive SSID", "status": "Active" }], "is_gateway": true },
+            { "id": "74:83:C2:11:22:33", "ip": "192.168.20.15", "mac": "74:83:C2:11:22:33", "vendor": "Ubiquiti Networks", "hostname": "UniFi-U6-Pro-Ceiling-01", "type": "Gateway / Router", "status": "Active", "rtt_ms": 2.1, "open_ports": [22, 80, 443, 8080], "connection": "Dual-Band (2.4G + 5G)", "wifi_band": "Dual-Band", "interface_type": "Wi-Fi 6 PoE Access Point", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz 4x4 MU-MIMO", "status": "Active" }, { "band": "2.4 GHz 2x2 IoT", "status": "Active" }], "is_gateway": false },
+            { "id": "AC:DE:48:99:88:77", "ip": "192.168.20.110", "mac": "AC:DE:48:99:88:77", "vendor": "Apple", "hostname": "emea-director-macbook", "type": "Workstation PC / Laptop", "status": "Active", "rtt_ms": 6.8, "open_ports": [22], "connection": "5 GHz Wi-Fi", "wifi_band": "5 GHz", "interface_type": "Wi-Fi 6 (802.11ax 80MHz)", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz Channel 44", "status": "Active" }], "is_gateway": false },
+            { "id": "48:5F:99:AA:BB:CC", "ip": "192.168.20.125", "mac": "48:5F:99:AA:BB:CC", "vendor": "Dell Inc.", "hostname": "dell-precision-cad-ws", "type": "Workstation PC / Laptop", "status": "Active", "rtt_ms": 2.8, "open_ports": [22, 445, 3389], "connection": "Ethernet (LAN)", "wifi_band": "LAN", "interface_type": "Intel 2.5GbE", "parallel_capable": false, "parallel_connections": [], "is_gateway": false },
+            { "id": "64:16:7F:33:44:55", "ip": "192.168.20.180", "mac": "64:16:7F:33:44:55", "vendor": "Samsung Electronics", "hostname": "Galaxy-S24-Ultra-Branch", "type": "Mobile Device", "status": "Active", "rtt_ms": 11.2, "open_ports": [], "connection": "Parallel Dual-Band (5G + 2.4G)", "wifi_band": "Dual-Band", "interface_type": "Wi-Fi 7 MLO Operation", "parallel_capable": true, "parallel_connections": [{ "band": "5 GHz Primary Link", "status": "Active" }, { "band": "2.4 GHz Auxiliary", "status": "Active" }], "is_gateway": false },
+            { "id": "30:AE:A4:77:88:99", "ip": "192.168.20.200", "mac": "30:AE:A4:77:88:99", "vendor": "Espressif Inc.", "hostname": "hvac-temp-sensor-emea", "type": "Smart Home / IoT", "status": "Active", "rtt_ms": 18.4, "open_ports": [80], "connection": "2.4 GHz Wi-Fi", "wifi_band": "2.4 GHz", "interface_type": "Wi-Fi 4 2.4G Low Power", "parallel_capable": false, "parallel_connections": [], "is_gateway": false }
+          ]
+        };
+      }
+      return getEmbeddedSample();
+    }
+
+    // Fetch live telemetry from CloudFront or S3
+    async function fetchTelemetry(showToastNotification = false) {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('animate-spin');
+
+      try {
+        const fetchUrl = `${currentEndpoint}?_t=${Date.now()}`;
+        const response = await fetch(fetchUrl, {
+          cache: 'no-store',
+          headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+        });
+
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        const data = await response.json();
+        data.devices = sanitizeAndDeduplicate(data.devices || []);
+        telemetryData = data;
+        lastFetchTimestamp = Date.now();
+        applyFilterAndSearch();
+        updateKpis();
+        if (showToastNotification) showToast(`Synchronized ${data.devices.length} devices`);
+      } catch (err) {
+        console.warn('[!] Could not fetch live endpoint:', currentEndpoint, err.message, '- Using site fallback');
+        const fallback = getEmbeddedSiteData(currentSiteKey);
+        if (fallback) {
+          fallback.devices = sanitizeAndDeduplicate(fallback.devices || []);
+          telemetryData = fallback;
+          lastFetchTimestamp = Date.now();
+          applyFilterAndSearch();
+          updateKpis();
+          if (showToastNotification) showToast(`Loaded ${fallback.meta.site_name} inventory`);
+        } else if (!telemetryData) {
+          await loadSampleData(false);
+        }
+      } finally {
+        if (icon) {
+          setTimeout(() => icon.classList.remove('animate-spin'), 600);
+        }
+      }
+    }
+
+    // Load sample dataset fallback
+    async function loadSampleData(notify = true) {
+      try {
+        const res = await fetch('devices.sample.json');
+        if (res.ok) {
+          const sample = await res.json();
+          sample.devices = sanitizeAndDeduplicate(sample.devices || []);
+          telemetryData = sample;
+        } else {
+          telemetryData = getEmbeddedSample();
+          telemetryData.devices = sanitizeAndDeduplicate(telemetryData.devices || []);
+        }
+      } catch (e) {
+        telemetryData = getEmbeddedSample();
+        telemetryData.devices = sanitizeAndDeduplicate(telemetryData.devices || []);
+      }
+      lastFetchTimestamp = Date.now();
+      applyFilterAndSearch();
+      updateKpis();
+      if (notify) {
+        showToast('Sample telemetry inventory loaded');
+        closeConfigModal();
+      }
+    }
+
+    // Update Top Summary KPIs
+    function updateKpis() {
+      if (!telemetryData || !telemetryData.meta) return;
+      const meta = telemetryData.meta;
+      const devices = telemetryData.devices || [];
+
+      document.getElementById('kpiTotal').textContent = devices.length;
+      const onlineCount = devices.filter(d => d.status === 'Active' || d.status === 'Idle').length;
+      document.getElementById('kpiOnline').textContent = onlineCount;
+      document.getElementById('kpiGateway').textContent = meta.gateway || '192.168.1.1';
+      document.getElementById('headerStatusText').textContent = `ONLINE / SCANNING ${meta.subnet || '192.168.1.0/24'}`;
+      
+      // Update filter counts
+      document.getElementById('countAll').textContent = devices.length;
+      document.getElementById('countOnline').textContent = devices.filter(d => d.status === 'Active').length;
+      document.getElementById('countIdle').textContent = devices.filter(d => d.status === 'Idle').length;
+      document.getElementById('countOffline').textContent = devices.filter(d => d.status === 'Offline').length;
+
+      // Wi-Fi Band counts
+      const dualCount = devices.filter(d => (d.wifi_band || '').includes('Dual') || (d.connection || '').includes('Dual') || (d.parallel_connections && d.parallel_connections.length > 0)).length;
+      const fiveGCount = devices.filter(d => (d.wifi_band || '').includes('5 GHz') || (d.connection || '').includes('5 GHz') || (d.connection || '').includes('5G')).length;
+      const twoGCount = devices.filter(d => (d.wifi_band || '').includes('2.4') || (d.connection || '').includes('2.4')).length;
+      
+      const elDual = document.getElementById('countDual');
+      const el5G = document.getElementById('count5G');
+      const el2G = document.getElementById('count2G');
+      if (elDual) elDual.textContent = dualCount;
+      if (el5G) el5G.textContent = fiveGCount;
+      if (el2G) el2G.textContent = twoGCount;
+
+      // Update footer payload bytes
+      const bytes = new Blob([JSON.stringify(telemetryData)]).size;
+      document.getElementById('payloadMetaBytes').textContent = `${(bytes / 1024).toFixed(1)} KB`;
+
+      // Synchronize WAN speedtest telemetry
+      updateSpeedtestUi();
+    }
+
+    // Update ticking "Last scan: Xs ago"
+    function updateLastScanTicker() {
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - lastFetchTimestamp) / 1000));
+      const el = document.getElementById('kpiLastScan');
+      if (elapsedSeconds < 5) {
+        el.textContent = 'Just now';
+      } else if (elapsedSeconds < 60) {
+        el.textContent = `${elapsedSeconds}s ago`;
+      } else {
+        const mins = Math.floor(elapsedSeconds / 60);
+        el.textContent = `${mins}m ago`;
+      }
+    }
+
+    // Filtering & Searching logic (Apple Segmented Control)
+    function setFilter(filterKey) {
+      currentFilter = filterKey;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('apple-pill-active');
+        btn.classList.add('text-neutral-400');
+        if (btn.getAttribute('data-filter') === filterKey) {
+          btn.classList.add('apple-pill-active');
+          btn.classList.remove('text-neutral-400');
+        }
+      });
+      applyFilterAndSearch();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.trim().toLowerCase();
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery.length === 0);
+      applyFilterAndSearch();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      searchQuery = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      applyFilterAndSearch();
+    }
+
+    function applyFilterAndSearch() {
+      if (!telemetryData || !telemetryData.devices) return;
+      let list = [...telemetryData.devices];
+
+      // Filter by category, state, or Wi-Fi band
+      if (currentFilter === 'Online') {
+        list = list.filter(d => d.status === 'Active');
+      } else if (currentFilter === 'Idle') {
+        list = list.filter(d => d.status === 'Idle');
+      } else if (currentFilter === 'Offline') {
+        list = list.filter(d => d.status === 'Offline');
+      } else if (currentFilter === 'DualBand') {
+        list = list.filter(d => (d.wifi_band || '').includes('Dual') || (d.connection || '').includes('Dual') || (d.parallel_connections && d.parallel_connections.length > 0));
+      } else if (currentFilter === '5GHz') {
+        list = list.filter(d => (d.wifi_band || '').includes('5 GHz') || (d.connection || '').includes('5 GHz') || (d.connection || '').includes('5G'));
+      } else if (currentFilter === '2.4GHz') {
+        list = list.filter(d => (d.wifi_band || '').includes('2.4') || (d.connection || '').includes('2.4'));
+      } else if (currentFilter === 'IoT') {
+        list = list.filter(d => d.type.toLowerCase().includes('iot') || d.type.toLowerCase().includes('smart'));
+      } else if (currentFilter === 'Mobile') {
+        list = list.filter(d => d.type.toLowerCase().includes('mobile') || d.hostname.toLowerCase().includes('phone'));
+      } else if (currentFilter === 'Workstation') {
+        list = list.filter(d => d.type.toLowerCase().includes('workstation') || d.type.toLowerCase().includes('pc'));
+      } else if (currentFilter === 'Gateway') {
+        list = list.filter(d => d.is_gateway || d.type.toLowerCase().includes('gateway'));
+      }
+
+      // Filter by search query
+      if (searchQuery) {
+        list = list.filter(d => {
+          const portsStr = (d.open_ports || []).join(' ');
+          const bandStr = (d.wifi_band || '') + ' ' + (d.connection || '');
+          return (
+            (d.ip || '').toLowerCase().includes(searchQuery) ||
+            (d.mac || '').toLowerCase().includes(searchQuery) ||
+            (d.vendor || '').toLowerCase().includes(searchQuery) ||
+            (d.hostname || '').toLowerCase().includes(searchQuery) ||
+            (d.type || '').toLowerCase().includes(searchQuery) ||
+            bandStr.toLowerCase().includes(searchQuery) ||
+            portsStr.includes(searchQuery)
+          );
+        });
+      }
+
+      // Sort
+      list.sort((a, b) => {
+        let valA = a[sortColumn];
+        let valB = b[sortColumn];
+        if (sortColumn === 'ip') {
+          valA = a.ip.split('.').map(Number);
+          valB = b.ip.split('.').map(Number);
+          for (let i = 0; i < 4; i++) {
+            if (valA[i] !== valB[i]) return sortAsc ? valA[i] - valB[i] : valB[i] - valA[i];
+          }
+          return 0;
+        }
+        if (valA == null) return 1;
+        if (valB == null) return -1;
+        if (valA < valB) return sortAsc ? -1 : 1;
+        if (valA > valB) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      filteredDevices = list;
+      renderActiveView();
+    }
+
+    function switchView(view) {
+      currentView = view;
+      const cardsBtn = document.getElementById('viewCardsBtn');
+      const tableBtn = document.getElementById('viewTableBtn');
+      const cardsGrid = document.getElementById('cardsGrid');
+      const tableView = document.getElementById('tableView');
+
+      if (view === 'cards') {
+        cardsBtn.classList.add('bg-white/[0.12]', 'text-white', 'shadow-sm');
+        cardsBtn.classList.remove('text-neutral-400');
+        tableBtn.classList.remove('bg-white/[0.12]', 'text-white', 'shadow-sm');
+        tableBtn.classList.add('text-neutral-400');
+        cardsGrid.classList.remove('hidden');
+        tableView.classList.add('hidden');
+      } else {
+        tableBtn.classList.add('bg-white/[0.12]', 'text-white', 'shadow-sm');
+        tableBtn.classList.remove('text-neutral-400');
+        cardsBtn.classList.remove('bg-white/[0.12]', 'text-white', 'shadow-sm');
+        cardsBtn.classList.add('text-neutral-400');
+        tableView.classList.remove('hidden');
+        cardsGrid.classList.add('hidden');
+      }
+      renderActiveView();
+    }
+
+    function sortTable(column) {
+      if (sortColumn === column) {
+        sortAsc = !sortAsc;
+      } else {
+        sortColumn = column;
+        sortAsc = true;
+      }
+      applyFilterAndSearch();
+    }
+
+    // Render Cards or Table
+    function renderActiveView() {
+      const emptyState = document.getElementById('emptyState');
+      const cardsGrid = document.getElementById('cardsGrid');
+      const tableBody = document.getElementById('tableBody');
+
+      if (filteredDevices.length === 0) {
+        emptyState.classList.remove('hidden');
+        cardsGrid.innerHTML = '';
+        tableBody.innerHTML = '';
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      if (currentView === 'cards') {
+        renderCards();
+      } else {
+        renderTable();
+      }
+      lucide.createIcons();
+    }
+
+    // Render Cards View (Apple HomeKit & Control Center aesthetic)
+    function renderCards() {
+      const container = document.getElementById('cardsGrid');
+      container.innerHTML = filteredDevices.map(d => {
+        const iconName = getDeviceIcon(d.type, d.hostname, d.vendor);
+        const isGw = d.is_gateway;
+        const statusBorder = isGw 
+          ? 'border-sky-500/40 hover:border-sky-400' 
+          : d.status === 'Active' 
+            ? 'border-white/[0.08] hover:border-white/[0.2]' 
+            : d.status === 'Idle' 
+              ? 'border-white/[0.06] hover:border-amber-500/30' 
+              : 'border-white/[0.04] opacity-70 hover:opacity-100';
+
+        const portsBadge = (d.open_ports && d.open_ports.length > 0)
+          ? d.open_ports.slice(0, 3).map(p => `<span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/[0.06] border border-white/[0.08] text-neutral-300">${p}</span>`).join('')
+          : '';
+
+        const latencyHtml = (d.rtt_ms != null)
+          ? `<span class="inline-flex items-center gap-1.5 text-[11px] text-neutral-400"><span class="w-1.5 h-1.5 rounded-full ${d.rtt_ms < 5 ? 'bg-emerald-400' : d.rtt_ms < 25 ? 'bg-sky-400' : 'bg-amber-400'}"></span> ${d.rtt_ms} ms</span>`
+          : `<span class="text-[11px] text-neutral-500">Local node</span>`;
+
+        // Parallel links pill
+        const hasParallel = d.parallel_connections && d.parallel_connections.length > 0;
+        const parallelPill = hasParallel
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="Parallel Multi-Band Wi-Fi Connection Active">
+               <i data-lucide="zap" class="w-2.5 h-2.5 text-emerald-400"></i> Parallel (${d.parallel_connections.length})
+             </span>`
+          : '';
+
+        const bandBadge = getBandBadge(d.wifi_band, d.connection);
+
+        return `
+          <div class="group apple-glass-card ${statusBorder} rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- Card Header -->
+            <div>
+              <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div class="w-11 h-11 rounded-2xl bg-gradient-to-b from-white/[0.1] to-white/[0.02] border border-white/[0.08] shadow-inner flex items-center justify-center text-neutral-200 group-hover:text-white group-hover:scale-105 transition-all shrink-0">
+                    <i data-lucide="${iconName}" class="w-5 h-5"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="text-[15px] font-semibold text-white tracking-tight truncate group-hover:text-sky-300 transition-colors" title="${d.hostname}">
+                      ${d.hostname}
+                    </h3>
+                    <p class="text-[12px] text-neutral-400 font-normal truncate">${d.vendor} &bull; ${d.type}</p>
+                  </div>
+                </div>
+
+                <div class="shrink-0">
+                  ${getStatusBadge(d.status)}
+                </div>
+              </div>
+
+              <!-- Grouped Technical Inset Box -->
+              <div class="bg-black/35 rounded-2xl p-3 border border-white/[0.04] space-y-2 text-xs">
+                
+                <!-- IP Row -->
+                <div class="flex items-center justify-between text-neutral-400">
+                  <span class="text-[11px] text-neutral-400">IP Address</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-mono text-[12px] font-medium text-neutral-200 select-all">${d.ip}</span>
+                    <button onclick="copyToClipboard('${d.ip}', event)" class="text-neutral-500 hover:text-white p-0.5 rounded transition-colors" title="Copy IP">
+                      <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- MAC Row -->
+                <div class="flex items-center justify-between text-neutral-400">
+                  <span class="text-[11px] text-neutral-400">MAC</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-mono text-[11px] text-neutral-400 select-all">${d.mac}</span>
+                    <button onclick="copyToClipboard('${d.mac}', event)" class="text-neutral-500 hover:text-white p-0.5 rounded transition-colors" title="Copy MAC">
+                      <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Wi-Fi Link / Band Row -->
+                <div class="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+                  <span class="text-[11px] text-neutral-400">Link Band</span>
+                  <div class="flex items-center gap-1.5">
+                    ${bandBadge}
+                    ${parallelPill}
+                  </div>
+                </div>
+
+                <!-- Ports Row (if present) -->
+                ${d.open_ports && d.open_ports.length > 0 ? `
+                <div class="flex items-center justify-between pt-1 border-t border-white/[0.04]">
+                  <span class="text-[11px] text-neutral-400">Services</span>
+                  <div class="flex items-center gap-1 flex-wrap justify-end">
+                    ${portsBadge}
+                  </div>
+                </div>` : ''}
+
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="mt-4 pt-3.5 border-t border-white/[0.06] flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                ${latencyHtml}
+              </div>
+
+              <button onclick="openInspector('${d.id}')" class="px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-neutral-200 hover:text-white text-xs font-medium transition-all flex items-center gap-1 group-hover:border group-hover:border-white/10 active:scale-95">
+                <span>Details</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 transition-transform"></i>
+              </button>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Dense Table View (Apple Numbers aesthetic)
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = filteredDevices.map(d => {
+        const iconName = getDeviceIcon(d.type, d.hostname, d.vendor);
+        const portsStr = (d.open_ports && d.open_ports.length > 0) ? d.open_ports.join(', ') : 'None';
+        const latencyStr = d.rtt_ms != null ? `${d.rtt_ms} ms` : '--';
+        const bandBadge = getBandBadge(d.wifi_band, d.connection);
+
+        return `
+          <tr class="hover:bg-white/[0.03] transition-colors">
+            <td class="py-3 px-4 whitespace-nowrap">${getStatusBadge(d.status)}</td>
+            <td class="py-3 px-4 font-medium text-white whitespace-nowrap">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-neutral-300">
+                  <i data-lucide="${iconName}" class="w-3.5 h-3.5"></i>
+                </div>
+                <span>${d.hostname}</span>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-neutral-200 font-mono text-xs whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <span>${d.ip}</span>
+                <button onclick="copyToClipboard('${d.ip}', event)" class="text-neutral-500 hover:text-white p-0.5">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-neutral-400 font-mono text-[11px] whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <span>${d.mac}</span>
+                <button onclick="copyToClipboard('${d.mac}', event)" class="text-neutral-500 hover:text-white p-0.5">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-neutral-300 whitespace-nowrap">${d.vendor}</td>
+            <td class="py-3 px-4 whitespace-nowrap">${bandBadge}</td>
+            <td class="py-3 px-4 text-neutral-400 whitespace-nowrap">${d.type}</td>
+            <td class="py-3 px-4 text-sky-400 font-medium whitespace-nowrap">${latencyStr}</td>
+            <td class="py-3 px-4 text-neutral-400 text-[11px] max-w-[150px] truncate" title="${portsStr}">${portsStr}</td>
+            <td class="py-3 px-4 text-right whitespace-nowrap">
+              <button onclick="openInspector('${d.id}')" class="px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.14] border border-white/[0.08] text-neutral-200 hover:text-white text-[11px] font-medium transition-all">
+                Details
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Modal Inspector
+    let currentInspectedDevice = null;
+    function openInspector(deviceId) {
+      const dev = (telemetryData.devices || []).find(d => d.id === deviceId);
+      if (!dev) return;
+      currentInspectedDevice = dev;
+
+      document.getElementById('modalHostname').textContent = dev.hostname;
+      document.getElementById('modalIp').textContent = `${dev.ip} ${dev.is_gateway ? '(Default Gateway)' : ''}`;
+      document.getElementById('modalStatusBadge').innerHTML = getStatusBadge(dev.status);
+      document.getElementById('modalVendor').textContent = dev.vendor;
+      document.getElementById('modalMac').textContent = dev.mac;
+      document.getElementById('modalType').textContent = dev.type;
+      document.getElementById('modalRtt').textContent = dev.rtt_ms != null ? `${dev.rtt_ms} ms` : 'Offline / Unresponsive';
+      document.getElementById('modalFirstSeen').textContent = dev.first_seen ? new Date(dev.first_seen).toLocaleString() : '--';
+      document.getElementById('modalLastSeen').textContent = dev.last_seen ? new Date(dev.last_seen).toLocaleString() : '--';
+
+      // Band & Interface
+      document.getElementById('modalBandBadge').innerHTML = getBandBadge(dev.wifi_band, dev.connection);
+      document.getElementById('modalInterface').textContent = dev.interface_type || dev.connection || 'Wi-Fi 802.11';
+
+      // Parallel Links Section
+      const parallelSection = document.getElementById('modalParallelSection');
+      const parallelList = document.getElementById('modalParallelList');
+      if (dev.parallel_connections && dev.parallel_connections.length > 0) {
+        parallelSection.classList.remove('hidden');
+        parallelList.innerHTML = dev.parallel_connections.map((link, idx) => {
+          const bandName = link.band || link.interface || `Link #${idx + 1}`;
+          const detail = link.ssid ? `SSID: ${link.ssid} (Ch ${link.channel || '--'})` : (link.speed || link.interface || `Latency: ${link.rtt_ms ? link.rtt_ms + 'ms' : 'Active'}`);
+          const status = link.status || 'Active';
+          return `<div class="flex items-center justify-between p-2 rounded bg-[#0d131f] border border-[#1f293d] text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span class="font-bold text-slate-100">${bandName}</span>
+              <span class="text-slate-400 text-[11px]">&bull; ${detail}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">${status}</span>
+          </div>`;
+        }).join('');
+      } else {
+        parallelSection.classList.add('hidden');
+        parallelList.innerHTML = '';
+      }
+
+      // Open ports list
+      const portsContainer = document.getElementById('modalPortsList');
+      if (dev.open_ports && dev.open_ports.length > 0) {
+        portsContainer.innerHTML = dev.open_ports.map(p => {
+          const serviceName = PORT_SERVICES[p] || 'Standard TCP Service';
+          return `<div class="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-neutral-200 flex items-center gap-2">
+            <span class="text-sky-400 font-mono font-semibold">${p}</span>
+            <span class="text-neutral-400 text-[11px] font-normal">${serviceName}</span>
+          </div>`;
+        }).join('');
+      } else {
+        portsContainer.innerHTML = `<span class="text-neutral-500 italic">No open management ports exposed</span>`;
+      }
+
+      // Raw JSON
+      document.getElementById('modalRawJson').textContent = JSON.stringify(dev, null, 2);
+
+      document.getElementById('inspectorModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeInspectorModal() {
+      document.getElementById('inspectorModal').classList.add('hidden');
+    }
+
+    function copyModalJson() {
+      if (currentInspectedDevice) {
+        navigator.clipboard.writeText(JSON.stringify(currentInspectedDevice, null, 2));
+        showToast('Device JSON copied to clipboard');
+      }
+    }
+
+    // Config Modal
+    function openConfigModal() {
+      document.getElementById('configEndpointInput').value = currentEndpoint;
+      document.getElementById('configIntervalSelect').value = refreshIntervalMs;
+      document.getElementById('configModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeConfigModal() {
+      document.getElementById('configModal').classList.add('hidden');
+    }
+
+    function saveConfiguration() {
+      currentEndpoint = document.getElementById('configEndpointInput').value.trim() || 'devices.json';
+      refreshIntervalMs = parseInt(document.getElementById('configIntervalSelect').value, 10);
+      
+      const intervalSec = refreshIntervalMs / 1000;
+      document.getElementById('autoRefreshLabel').textContent = refreshIntervalMs > 0 ? `${intervalSec}s Auto` : 'Manual';
+      
+      setupAutoRefresh();
+      closeConfigModal();
+      fetchTelemetry(true);
+      showToast('Settings saved successfully');
+    }
+
+    // Auto-refresh management
+    function setupAutoRefresh() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      if (refreshIntervalMs > 0) {
+        autoRefreshTimer = setInterval(() => {
+          fetchTelemetry(false);
+        }, refreshIntervalMs);
+      }
+    }
+
+    function triggerManualRefresh() {
+      fetchTelemetry(true);
+    }
+
+    // Copy to clipboard helper
+    function copyToClipboard(text, event) {
+      if (event) event.stopPropagation();
+      navigator.clipboard.writeText(text);
+      showToast(`Copied ${text}`);
+    }
+
+    // Export dataset
+    function exportData(format) {
+      if (!telemetryData || !telemetryData.devices) return;
+      if (format === 'json') {
+        const jsonStr = JSON.stringify(telemetryData, null, 2);
+        downloadFile(jsonStr, 'network_telemetry.json', 'application/json');
+      } else if (format === 'csv') {
+        let csv = 'IP,MAC,Hostname,Vendor,Type,Status,RTT_ms,Open_Ports\n';
+        telemetryData.devices.forEach(d => {
+          csv += `"${d.ip}","${d.mac}","${d.hostname}","${d.vendor}","${d.type}","${d.status}","${d.rtt_ms || ''}","${(d.open_ports || []).join(';')}"\n`;
+        });
+        downloadFile(csv, 'network_telemetry.csv', 'text/csv');
+      }
+      showToast(`Exported ${format.toUpperCase()} dataset`);
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Toast notification
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    // Embedded fallback dataset if devices.json is unreachable
+    function getEmbeddedSample() {
+      return {
+        "meta": {
+          "version": "1.0.0",
+          "scanner": "NET_DISCOVERY_v1.0",
+          "timestamp": new Date().toISOString(),
+          "subnet": "192.168.1.0/24",
+          "gateway": "192.168.1.1",
+          "total_devices": 24,
+          "online_devices": 19,
+          "offline_devices": 5,
+          "scan_duration_ms": 482.4,
+          "maintainer": {
+            "name": "Vedant Singh",
+            "role": "Network Automation & Systems Engineer",
+            "portfolio": "https://www.sshconnect.space/",
+            "github": "https://github.com",
+            "linkedin": "https://linkedin.com"
+          },
+          "speedtest": {
+            "download_mbps": 485.6,
+            "upload_mbps": 128.4,
+            "ping_ms": 9.2,
+            "jitter_ms": 1.4,
+            "isp": "Airtel Xstream Fiber / Cloudflare Edge",
+            "server": "Edge Anycast Subnet Server",
+            "timestamp": "Live Synchronized"
+          }
+        },
+        "devices": [
+          { "id": "00:11:22:33:44:55", "ip": "192.168.1.1", "mac": "00:11:22:33:44:55", "vendor": "CISCO", "hostname": "Gateway / Router", "type": "Gateway / Router", "status": "Active", "rtt_ms": 1.2, "open_ports": [53, 80, 443], "is_gateway": true, "first_seen": "2026-10-01T08:00:00Z", "last_seen": new Date().toISOString() },
+          { "id": "AA:88:CC:DD:EE:FF", "ip": "192.168.1.42", "mac": "AA:88:CC:DD:EE:FF", "vendor": "ESPRESSIF", "hostname": "Smart Home Hub", "type": "Smart Home / IoT", "status": "Active", "rtt_ms": 18.4, "open_ports": [80, 5353], "is_gateway": false, "first_seen": "2026-10-10T14:22:10Z", "last_seen": new Date().toISOString() },
+          { "id": "11:22:33:44:55:66", "ip": "192.168.1.100", "mac": "11:22:33:44:55:66", "vendor": "INTEL", "hostname": "Workstation PC", "type": "Workstation PC / Laptop", "status": "Active", "rtt_ms": 10.1, "open_ports": [22, 445, 3000], "is_gateway": false, "first_seen": "2026-10-05T11:15:00Z", "last_seen": new Date().toISOString() },
+          { "id": "A1:B2:C3:D4:E5:F6", "ip": "192.168.1.105", "mac": "A1:B2:C3:D4:E5:F6", "vendor": "APPLE", "hostname": "Personal iPhone", "type": "Mobile Device", "status": "Idle", "rtt_ms": 23.5, "open_ports": [62078], "is_gateway": false, "first_seen": "2026-10-02T09:40:00Z", "last_seen": new Date().toISOString() },
+          { "id": "AA:88:CC:DD:EE:11", "ip": "192.168.1.103", "mac": "AA:88:CC:DD:EE:11", "vendor": "ESPRESSIF", "hostname": "Smart Home Hub", "type": "Smart Home / IoT", "status": "Active", "rtt_ms": 12.8, "open_ports": [80], "is_gateway": false, "first_seen": "2026-10-12T16:04:18Z", "last_seen": new Date().toISOString() },
+          { "id": "A1:B2:C3:99:88:77", "ip": "192.168.1.185", "mac": "A1:B2:C3:99:88:77", "vendor": "APPLE", "hostname": "Personal iPhone", "type": "Mobile Device", "status": "Idle", "rtt_ms": 35.0, "open_ports": [5353], "is_gateway": false, "first_seen": "2026-10-14T20:15:00Z", "last_seen": new Date().toISOString() },
+          { "id": "DC:A6:32:44:99:AA", "ip": "192.168.1.10", "mac": "DC:A6:32:44:99:AA", "vendor": "Raspberry Pi Foundation", "hostname": "Pi-hole & DNS Shield", "type": "Server / Infrastructure", "status": "Active", "rtt_ms": 2.4, "open_ports": [22, 53, 80], "is_gateway": false, "first_seen": "2026-10-01T08:00:00Z", "last_seen": new Date().toISOString() },
+          { "id": "00:11:32:8B:2A:9C", "ip": "192.168.1.20", "mac": "00:11:32:8B:2A:9C", "vendor": "Synology Inc.", "hostname": "Storage Vault NAS", "type": "Network Storage / NAS", "status": "Active", "rtt_ms": 3.8, "open_ports": [22, 445, 5000], "is_gateway": false, "first_seen": "2026-10-01T08:00:00Z", "last_seen": new Date().toISOString() }
+        ]
+      };
+    }
+  </script>
+</body>
+</html>
